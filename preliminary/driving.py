@@ -16,7 +16,7 @@ import signal
 import sys
 import os
 import random
-#dlgusals
+
 #=============================================+
 # 터미널에서 Ctrl-C 키입력으로 프로그램 실행을 끝낼 때
 # 그 처리시간을 줄이기 위한 함수
@@ -70,27 +70,40 @@ def warp_image(img, src, dst, size):
 
 
 def warp_process_image(img):
+    
+    #bounding box계산을 위한 값
     global nwindows
     global margin
     global minpix
     global lane_bin_th
 
+    #GaussianBLur와 cvtColor를 통해 BGR에서 HLS로 변환
     blur = cv2.GaussianBlur(img,(5, 5), 0)
     _, L, _ = cv2.split(cv2.cvtColor(blur, cv2.COLOR_BGR2HLS)   )
+    #threshold를 통해 L채널을 이진화해주며 lane에 넣음.
     _, lane = cv2.threshold(L, lane_bin_th, 255, cv2.       THRESH_BINARY)
-
-    histogram = np.sum(lane[lane.shape[0]//2:,:],   axis=0)      
+    #lane에서 세로축 반으로 slice해준 후에 axis=0 즉 (240,320)인 lane에서 첫번쨰 축을 더해줌으로
+    #(320,)으로 histogram을 만들어 줄 수 있다.
+    histogram = np.sum(lane[lane.shape[0]//2:,:],   axis=0)
+    #가로 중간지점     
     midpoint = np.int(histogram.shape[0]/2)
+    
     leftx_current = np.argmax(histogram[:midpoint])
     rightx_current = np.argmax(histogram[midpoint:]) +  midpoint
 
+    # 차량 주행 중에 차선인식이 일어나지 않는 경우,
+    # 해당 차선을 인식할 떄 사용되던 window들의 default위치를 조정.
     if (leftx_current == 0):
         leftx_current = int(midpoint - 355 / 2)
                       
     if rightx_current==midpoint:
         rightx_current = int(midpoint + 355 / 2)
 
+    #쌓을 window의 height 설정
     window_height = np.int(lane.shape[0]/nwindows)
+    
+    #240*320 픽셀에 담긴 값중 0이 아닌 index들을 
+    #nz[0]에는 index[row][col] 중에 row파트만 담겨있고 nz[1]에는 col이 담겨있다.
     nz = lane.nonzero()
 
     left_lane_inds = []
@@ -104,6 +117,8 @@ def warp_process_image(img):
 
     for window in range(nwindows):
         
+        
+        #bounding box 크기 설정
         win_yl = lane.shape[0] - (window+1)*window_height
         win_yh = lane.shape[0] - window*window_height
 
@@ -112,20 +127,26 @@ def warp_process_image(img):
         win_xrl = rightx_current - margin
         win_xrh = rightx_current + margin
 
+        #out image에 bounding box 시각화
         cv2.rectangle(out_img,(win_xll,win_yl),(win_xlh,    win_yh),    (0,255,0), 2) 
         cv2.rectangle(out_img,(win_xrl,win_yl),(win_xrh,    win_yh),    (0,255,0), 2) 
 
+        #흰점의 픽셀들 중에 window안에 들어오는 픽셀인지 여부를 판단하여 
+        #good_left_inds와 good_right_inds에 담는다.
         good_left_inds = ((nz[0] >= win_yl)&(nz[0] < win_yh)&   (nz    [1] >= win_xll)&(nz[1] < win_xlh)).nonzero()    [0]
         good_right_inds = ((nz[0] >= win_yl)&(nz[0] < win_yh)   &(nz   [1] >= win_xrl)&(nz[1] < win_xrh)).nonzero()    [0]
 
         left_lane_inds.append(good_left_inds)
         right_lane_inds.append(good_right_inds)
 
+        #nz[1]값들 중에 good_left_inds를 index로 삼는 nz[1]들의 평균을 구해서 leftx_current를 갱신한다.
+        #nz[1]값들 중에 good_right_inds를 index로 삼는 nz[1]들의 평균을 구해서 rightx_current를 갱신한다.
         if len(good_left_inds) > minpix:
             leftx_current = np.int(np.mean(nz[1]    [good_left_inds])   )
         if len(good_right_inds) > minpix:        
             rightx_current = np.int(np.mean(nz[1]       [good_right_inds]))
 
+        #lx ly rx ry에 x,y좌표들의 중심점들을 담아둔다.
         lx.append(leftx_current)
         ly.append((win_yl + win_yh)/2)
 
@@ -138,6 +159,8 @@ def warp_process_image(img):
     lfit = np.polyfit(np.array(ly),np.array(lx),2)
     rfit = np.polyfit(np.array(ry),np.array(rx),2)
 
+    #out_img에서 왼쪽 선들의 픽셀값을 BLUE로, 
+    #오른쪽 선들의 픽셀값을 RED로 바꿔준다.
     out_img[nz[0][left_lane_inds], nz[1][left_lane_inds]] = [255, 0, 0]
     out_img[nz[0][right_lane_inds] , nz[1][right_lane_inds]]= [0, 0, 255]    
 
@@ -209,11 +232,13 @@ def start():
         global cal_roi
         global mtx
 
+        #차선인식에 쓰일 window 변수 설정
         nwindows = 10
         margin = 30
         minpix = 5
         lane_bin_th = 225
 
+        #주어진 영상의 원본 사다리꼴 좌표
         warp_src  = np.array([
             [Width*1/5, Height*3/4 - 5],  
             [0,Height-60],
@@ -221,6 +246,7 @@ def start():
             [Width,Height-60]
         ], dtype=np.float32)
 
+        #임의의 직사각형 좌표
         warp_dist = np.array([
             [128,0],
             [128,Height-60],
