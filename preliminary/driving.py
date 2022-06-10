@@ -16,7 +16,7 @@ import signal
 import sys
 import os
 import random
-
+#dlgusals
 #=============================================
 # 터미널에서 Ctrl-C 키입력으로 프로그램 실행을 끝낼 때
 # 그 처리시간을 줄이기 위한 함수
