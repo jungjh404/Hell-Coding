@@ -83,15 +83,18 @@ def warp_process_image(img):
     global minpix
     global lane_bin_th
 
-    #GaussianBLur와 cvtColor를 통해 BGR에서 HLS로 변환
+    # GaussianBLur와 cvtColor를 통해 BGR에서 HLS로 변환
     blur = cv2.GaussianBlur(img,(5, 5), 0)
-    _, L, _ = cv2.split(cv2.cvtColor(blur, cv2.COLOR_BGR2HLS)   )
-    #threshold를 통해 L채널을 이진화해주며 lane에 넣음.
-    _, lane = cv2.threshold(L, lane_bin_th, 255, cv2.       THRESH_BINARY)
-    #lane에서 세로축 반으로 slice해준 후에 axis=0 즉 (240,320)인 lane에서 첫번쨰 축을 더해줌으로
-    #(320,)으로 histogram을 만들어 줄 수 있다.
+    _, L, _ = cv2.split(cv2.cvtColor(blur, cv2.COLOR_BGR2HLS))
+
+    # threshold를 통해 L채널을 이진화해주며 lane에 넣음.
+    _, lane = cv2.threshold(L, lane_bin_th, 255, cv2. THRESH_BINARY)
+
+    # lane에서 세로축 반으로 slice해준 후에 axis=0 즉 (240,320)인 lane에서 첫번째 축을 더해줌으로서
+    # (320,)으로 histogram을 만들어 줄 수 있다.
     histogram = np.sum(lane[lane.shape[0]//2:,:],   axis=0)
-    #가로 중간지점     
+
+    # 가로 중간지점     
     midpoint = np.int(histogram.shape[0]/2)
     
     leftx_current = np.argmax(histogram[:midpoint])
@@ -122,7 +125,6 @@ def warp_process_image(img):
     out_img = np.dstack((lane, lane, lane))*255
 
     for window in range(nwindows):
-        
         
         #bounding box 크기 설정
         win_yl = lane.shape[0] - (window+1)*window_height
@@ -172,24 +174,40 @@ def warp_process_image(img):
 
     return lfit, rfit
 
+#=============================================
+# lane_tracking 함수
+# 차선인식 알고리즘으로 구한 좌측, 우측 차선의 각도와
+# 도로 중앙에서 떨어진 상대적인 거리를 이용
+# 적절한 gain 값으로 조향각을 계산하여 전달
+#=============================================
+
 def lane_tracking(left_line_angle, right_line_angle, curr_position):
-    # Lane tracking algorithm here
+    '''차선추종 알고리즘'''
+
+    # 경로각은 좌측 차선과 우측 차선의 각도로 계산
     lane_angle = -(0.5*left_line_angle + 0.5*right_line_angle)
 
     k1 = 0.7  # P gain
     k2 = 400   # Distance parameter
 
-    if -0.2 < curr_position < 0.2 :  # 좀 더 천천히 조향해도 괜찮은 상황
+    # 중앙에서 조금 벗어났으므로 천천히 조향해도 괜찮은 상황
+    if -0.2 < curr_position < 0.2 : 
         k2 = 400
-    
-    elif curr_position > 0.5 or curr_position < -0.5 :  # 신속하게 가운데로 들어와야 함
+
+    # 중앙에서 많이 벗어났으므로 신속하게 가운데로 들어와야 함
+    elif curr_position > 0.5 or curr_position < -0.5 :  
         k2 = 250
 
-    else:   # 그 중간의 경우 계수는 linear 변화
+    # 그 중간의 경우 계수는 linear하게 변화
+    else: 
         k2 = -500*abs(curr_position) + 500
 
+    # 도로의 커브 정도와 도로 중앙에서부터의 위치로 조향각 계산
     steer_angle = lane_angle * k1 + math.atan(-180 * (curr_position) / k2) * 180 / math.pi
 
+    # 코너를 돌며 한쪽 차선 인식이 안 되면 조향각과 경로각 중 하나가 음수가 되는 상황이 발생
+    # 이를 해결하기 위해서는 신속하게 도로 중앙으로 들어와 정상적인 차선인식이 되게끔 해야 함.
+    # gain을 부여하여 조향각 수정
     if steer_angle * lane_angle < 0:
         steer_angle = lane_angle * 2.5
 
@@ -291,21 +309,34 @@ def start():
         left_position = ((320 - float(lx[3])) / shift_const) * 2 - 1
         right_position = -((-320 + float(rx[4])) / shift_const) * 2 + 1
         
+        #=================================================
+        # 조향각과 속도를 제어하기 위한 부분.            
+        # 양측 차선 각도와 도로 중앙에 대한 현재 위치로 lane_tracking 함수 실행        
+        # 현재 위치와 커브 상태에 따라 계산된 제어값 전달
+        #=================================================
+
+        # 현재 위치 변수
         position = 0
         
+        # 우측 차선이 인식되지 않으면 좌측 차선을 위주로 현재 위치 계산
         if abs(math.degrees(math.atan(line_right[1]))) < 0.05:
             position = 0.9*left_position + 0.1*right_position
         
+        # 좌측 차선이 인식되지 않으면 우측 차선을 위주로 현재 위치 계산
         elif abs(math.degrees(math.atan(line_left[1]))) < 0.05:
             position = 0.1*left_position + 0.9*right_position
         
+        # 두 차선이 모두 인식되면 두 차선에서 떨어진 거리로 현재 위치 계산
         else:
-            position = (left_position+right_position)/2
+            position = (left_position + right_position) / 2
         
+        # lane_tracking 함수로 조향각 도출
         angle = lane_tracking(left_line_angle, right_line_angle, position)               
         
+        # 기본 속도는 40으로 할당
         speed = 40
         
+        # 급커브라고 생각될 경우 속도를 줄여 안정적인 주행
         if abs(angle) > 7:
             speed = 25
         
@@ -315,9 +346,7 @@ def start():
         cv2.imshow("CAM View", out_img)
         cv2.waitKey(1)
 
-
         drive(angle, speed)
-
 
 #=============================================
 # 메인 함수
