@@ -79,10 +79,11 @@ def warp_process_image(img):
 
     #GaussianBLur와 cvtColor를 통해 BGR에서 HLS로 변환
     blur = cv2.GaussianBlur(img,(5, 5), 0)
-    _, L, _ = cv2.split(cv2.cvtColor(blur, cv2.COLOR_BGR2HLS)   )
+    _, L, _ = cv2.split(cv2.cvtColor(blur, cv2.COLOR_BGR2HLS))
     #threshold를 통해 L채널을 이진화해주며 lane에 넣음.
-    _, lane = cv2.threshold(L, lane_bin_th, 255, cv2.       THRESH_BINARY)
-    #lane에서 세로축 반으로 slice해준 후에 axis=0 즉 (240,320)인 lane에서 첫번쨰 축을 더해줌으로
+    _, lane = cv2.threshold(L, lane_bin_th, 255, cv2. THRESH_BINARY)
+
+    #lane에서 세로축 반으로 slice해준 후에 axis=0 즉 (240,320)인 lane에서 첫번쨰 축을 더해줌으로서
     #(320,)으로 histogram을 만들어 줄 수 있다.
     histogram = np.sum(lane[lane.shape[0]//2:,:],   axis=0)
     #가로 중간지점     
@@ -93,17 +94,17 @@ def warp_process_image(img):
 
     # 차량 주행 중에 차선인식이 일어나지 않는 경우,
     # 해당 차선을 인식할 떄 사용되던 window들의 default위치를 조정.
-    if (leftx_current == 0):
+    if leftx_current == 0:
         leftx_current = int(midpoint - 355 / 2)
                       
-    if rightx_current==midpoint:
+    if rightx_current == midpoint:
         rightx_current = int(midpoint + 355 / 2)
 
-    #쌓을 window의 height 설정
+    # 쌓을 window의 height 설정
     window_height = np.int(lane.shape[0]/nwindows)
     
-    #240*320 픽셀에 담긴 값중 0이 아닌 index들을 
-    #nz[0]에는 index[row][col] 중에 row파트만 담겨있고 nz[1]에는 col이 담겨있다.
+    # 240*320 픽셀에 담긴 값중 0이 아닌 index들을 
+    # nz[0]에는 index[row][col] 중에 row파트만 담겨있고 nz[1]에는 col이 담겨있다.
     nz = lane.nonzero()
 
     left_lane_inds = []
@@ -117,8 +118,7 @@ def warp_process_image(img):
 
     for window in range(nwindows):
         
-        
-        #bounding box 크기 설정
+        # bounding box 크기 설정
         win_yl = lane.shape[0] - (window+1)*window_height
         win_yh = lane.shape[0] - window*window_height
 
@@ -127,26 +127,27 @@ def warp_process_image(img):
         win_xrl = rightx_current - margin
         win_xrh = rightx_current + margin
 
-        #out image에 bounding box 시각화
+        # out image에 bounding box 시각화
         cv2.rectangle(out_img,(win_xll,win_yl),(win_xlh,    win_yh),    (0,255,0), 2) 
         cv2.rectangle(out_img,(win_xrl,win_yl),(win_xrh,    win_yh),    (0,255,0), 2) 
 
-        #흰점의 픽셀들 중에 window안에 들어오는 픽셀인지 여부를 판단하여 
-        #good_left_inds와 good_right_inds에 담는다.
+        # 흰점의 픽셀들 중에 window안에 들어오는 픽셀인지 여부를 판단하여 
+        # good_left_inds와 good_right_inds에 담는다.
         good_left_inds = ((nz[0] >= win_yl)&(nz[0] < win_yh)&   (nz    [1] >= win_xll)&(nz[1] < win_xlh)).nonzero()    [0]
         good_right_inds = ((nz[0] >= win_yl)&(nz[0] < win_yh)   &(nz   [1] >= win_xrl)&(nz[1] < win_xrh)).nonzero()    [0]
 
         left_lane_inds.append(good_left_inds)
         right_lane_inds.append(good_right_inds)
 
-        #nz[1]값들 중에 good_left_inds를 index로 삼는 nz[1]들의 평균을 구해서 leftx_current를 갱신한다.
-        #nz[1]값들 중에 good_right_inds를 index로 삼는 nz[1]들의 평균을 구해서 rightx_current를 갱신한다.
+        # nz[1]값들 중에 good_left_inds를 index로 삼는 nz[1]들의 평균을 구해서 leftx_current를 갱신한다.
         if len(good_left_inds) > minpix:
             leftx_current = np.int(np.mean(nz[1]    [good_left_inds])   )
+
+        # nz[1]값들 중에 good_right_inds를 index로 삼는 nz[1]들의 평균을 구해서 rightx_current를 갱신한다.
         if len(good_right_inds) > minpix:        
             rightx_current = np.int(np.mean(nz[1]       [good_right_inds]))
 
-        #lx ly rx ry에 x,y좌표들의 중심점들을 담아둔다.
+        # lx ly rx ry에 x,y좌표들의 중심점들을 담아둔다.
         lx.append(leftx_current)
         ly.append((win_yl + win_yh)/2)
 
