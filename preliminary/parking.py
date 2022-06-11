@@ -194,8 +194,3 @@ while not rospy.is_shutdown():
 
 # while 루프가 끝나면 열린 윈도우 모두 닫고 깔끔하게 종료하기
 cv2.destroyAllWindows()
-
-
-
-
-
