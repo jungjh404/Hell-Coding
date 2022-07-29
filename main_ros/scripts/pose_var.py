@@ -65,7 +65,7 @@ class Pose:
         rospy.wait_for_message("/orb_slam2_mono/pose", PoseStamped)
         rospy.loginfo("Message Received Sucessfully")
         rospy.Subscriber("/orb_slam2_mono/pose", PoseStamped, self.callback)
-        rospy.Subscriber("/initialpose", PoseWithCovarianceStamped, self.initcallback)
+        # rospy.Subscriber("/initialpose", PoseWithCovarianceStamped, self.initcallback)
         self.pub = rospy.Publisher("/odom", Odometry, queue_size=1)
         rospy.spin()
 
@@ -159,10 +159,10 @@ class Pose:
         msg = Odometry()
         msg.header.frame_id = "map"
         msg.header.stamp = rospy.Time.now()
-        msg.child_frame_id = "base_link"
+        msg.child_frame_id = "odom"
         
-        msg.pose.pose.position.x = self.x + self.dif_x
-        msg.pose.pose.position.y = self.y + self.dif_y
+        msg.pose.pose.position.x = self.x
+        msg.pose.pose.position.y = self.y
         
         msg.pose.covariance[0] = self.var_x
         msg.pose.covariance[7] = self.var_y

@@ -1,0 +1,47 @@
+<launch>
+    <!-- Arguments -->
+    <arg name="model" default="$(env TURTLEBOT3_MODEL)" doc="model type [burger, waffle, waffle_pi]"/>
+    <arg name="map_file" default="$(find hell_coding)/map/map.yaml"/>
+    <arg name="open_rviz" default="true"/>
+    <arg name="move_forward_only" default="false"/>
+
+    <include file="$(find hell_coding_urdf)/launch/display.launch"/>
+
+    <!-- Sensor -->
+    <include file="$(find xycar_lidar)/launch/xycar_lidar.launch" />
+    <include file="$(find xycar_imu)/launch/xycar_imu.launch"/>
+    <include file="$(find usb_cam)/launch/xycar_cam.launch"/>
+
+    <!-- ORB SLAM -->
+    <include file="$(find hell_coding)/launch/orb_slam2_xycar.launch"/>
+    <node pkg="hell_coding" name="orb_to_odom" type="orb_to_odom.py"/>
+
+    <!-- viso2 -->
+    <!-- <include file="$(find viso2_ros)/launch/xycar_vslam.launch"/> -->
+
+    <!-- robot_pose_ekf -->
+    <!-- <include file="$(find robot_pose_ekf)/robot_pose_ekf.launch"/> -->
+
+
+    <!-- Map server -->
+    <node pkg="map_server" name="map_server" type="map_server" args="$(arg map_file)"/>
+
+    <!-- AMCL -->
+    <!-- <include file="$(find turtlebot3_navigation)/launch/amcl.launch"/> -->
+
+    <!-- move_base -->
+    <include file="$(find hell_coding)/launch/move_base.launch">
+        <arg name="move_forward_only" value="$(arg move_forward_only)"/>
+    </include>
+
+    <include file="$(find xycar_motor)/launch/xycar_motor.launch"/>
+
+    <!-- rviz -->
+    <group if="$(arg open_rviz)"> 
+        <node pkg="rviz" type="rviz" name="rviz" required="true"
+            args="-d $(find turtlebot3_navigation)/rviz/turtlebot3_navigation.rviz"/>
+    </group>
+
+    <!-- <node pkg="tf" name="static_transform_publisher" type="static_transform_publisher" args="0 -3.3 0 3.14 0 0 map odom 100"/> -->
+    <node pkg="tf" name="static_transform_publisher" type="static_transform_publisher" args="8 0 0.21 3.141592 0 0 map odom 100"/>
+</launch>
