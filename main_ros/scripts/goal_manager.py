@@ -17,30 +17,38 @@ class GoalManager:
 
         self.goal_pub = rospy.Publisher("move_base_simple/goal", PoseStamped, queue_size=1)
         rospy.Subscriber("/move_base/result", MoveBaseActionResult, self.reach_cb)
+
+        self.goal_pub(self.goal_msg_generate())
+
+
+    def goal_msg_generate(self):
+        next_goal_msg = PoseStamped()
+
+        next_goal_msg.header.seq = self.goal_cnt
+        next_goal_msg.header.stamp = rospy.Time.now()
+        next_goal_msg.header.frame_id = "map"
+
+        target = self.goal_list[self.goal_cnt]
+
+        if target is not None:
+            next_goal_msg.pose.position.x = target[0]
+            next_goal_msg.pose.position.y = target[1]
+
+            x, y, z, w = quaternion_from_euler(0, 0, math.radians(target[2]))
+            next_goal_msg.pose.orientation.x = x
+            next_goal_msg.pose.orientation.y = y
+            next_goal_msg.pose.orientation.z = z
+            next_goal_msg.pose.orientation.w = w
+        
+        return next_goal_msg
+
         
 
     def reach_cb(self, msg:MoveBaseActionResult):
         if msg.status.text == "Goal reached.":
             self.goal_cnt += 1
 
-            next_goal_msg = PoseStamped()
-
-            next_goal_msg.header.seq = self.goal_cnt
-            next_goal_msg.header.stamp = rospy.Time.now()
-            next_goal_msg.header.frame_id = "map"
-
-            target = self.goal_list[self.goal_cnt]
-
-            if target is not None:
-                next_goal_msg.pose.position.x = target[0]
-                next_goal_msg.pose.position.y = target[1]
-
-                x, y, z, w = quaternion_from_euler(0, 0, math.radians(target[2]))
-                next_goal_msg.pose.orientation.x = x
-                next_goal_msg.pose.orientation.y = y
-                next_goal_msg.pose.orientation.z = z
-                next_goal_msg.pose.orientation.w = w
-
+            next_goal_msg = self.goal_msg_generate()
 
             self.goal_pub.publish(next_goal_msg)
 
