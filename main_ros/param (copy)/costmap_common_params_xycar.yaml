@@ -1,0 +1,31 @@
+
+
+# footprint: [[-0.205, -0.155], [-0.205, 0.155], [0.077, 0.155], [0.077, -0.155]]
+footprint: [[-0.270, -0.140], [-0.270, 0.140], [0.320, 0.140], [0.320, -0.140]]
+#robot_radius: 0.17
+
+static_layer:
+  map_topic: /map
+
+obstacle_layer:
+  observation_sources: scan
+  
+  scan: 
+    topic: /scan
+    sensor_frame: base_scan 
+    data_type: LaserScan 
+    marking: true
+    clearing: true
+    obstacle_range: 3.0
+    raytrace_range: 3.5
+    max_obstacle_height: 20.0
+    min_obstacle_height: -20.0
+
+
+inflated_layer:
+  inflation_radius: 0.5
+  cost_scaling_factor: 3.0
+
+# map_type: costmap
+
+
