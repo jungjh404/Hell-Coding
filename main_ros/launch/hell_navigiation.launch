@@ -34,9 +34,12 @@
         <arg name="move_forward_only" value="$(arg move_forward_only)"/>
     </include>
 
+    <!-- AR Marker -->
+    <include file="$(find hell_coding)/launch/hell_ar_marker.launch"/>
+
     <!-- rviz -->
     <group if="$(arg open_rviz)"> 
         <node pkg="rviz" type="rviz" name="rviz" required="true"
-            args="-d $(find turtlebot3_navigation)/rviz/turtlebot3_navigation.rviz"/>
+            args="-d $(find hell_coding)/rviz/navigation.rviz"/>
     </group>
 </launch>
