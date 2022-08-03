@@ -61,8 +61,11 @@ class GoalManager:
                 target_frame = "ar_marker_"+str(alvar_msg.markers[0].id)
                 src_frame = "map"
 
+                self.tf_listener.waitForTransform(target_frame, src_frame, rospy.Time(), rospy.Duration(1.0))
                 try:
-                    trans, rot = self.tf_listener.lookupTransform(target_frame, src_frame, self.tf_listener.getLatestCommonTime(target_frame, src_frame))
+                    now = rospy.Time.now()
+                    self.tf_listener.waitForTransform(target_frame, src_frame, now, rospy.Duration(1.0))
+                    trans, rot = self.tf_listener.lookupTransform(target_frame, src_frame, now)
                 except Exception as E:
                     rospy.logwarn(E)
                     
