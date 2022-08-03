@@ -15,8 +15,8 @@ class GoalManager:
     def __init__(self):
         rospy.init_node("goal_manager", anonymous=True)
         self.goal_cnt = 0
-        # self.goal_list = [[5, 0, 0], [10, 0, 90], "parking"]
-        self.goal_list = ["parking"]
+        self.goal_list = [[5, 0, 0], [10, 0, 90]]
+        # self.goal_list = ["parking"]
         self.goal_num = len(self.goal_list)
 
         self.rate = rospy.Rate(10)
@@ -25,7 +25,7 @@ class GoalManager:
         self.res_sub = rospy.Subscriber("/move_base/result", MoveBaseActionResult, self.reach_cb)
         self.tf_listener = tf.TransformListener()
 
-        client = actionlib.SimpleActionClient('move_base',MoveBaseAction)
+        client = actionlib.SimpleActionClient('move_base', MoveBaseAction)
         client.wait_for_server()
 
         rospy.loginfo("Goal Manager Initialized.")
@@ -59,21 +59,34 @@ class GoalManager:
                 
             else:
                 target_frame = "ar_marker_"+str(alvar_msg.markers[0].id)
+                car_frame = "base_link"
                 src_frame = "map"
 
-                self.tf_listener.waitForTransform(target_frame, src_frame, rospy.Time(), rospy.Duration(1.0))
+                self.tf_listener.waitForTransform(src_frame, target_frame, rospy.Time(), rospy.Duration(1.0))
+                self.tf_listener.waitForTransform(car_frame, src_frame, rospy.Time(), rospy.Duration(1.0))
+                self.tf_listener.waitForTransform(target_frame, car_frame, rospy.Time(), rospy.Duration(1.0))
+
                 try:
                     now = rospy.Time.now()
-                    self.tf_listener.waitForTransform(target_frame, src_frame, now, rospy.Duration(1.0))
-                    trans, rot = self.tf_listener.lookupTransform(target_frame, src_frame, now)
+                    self.tf_listener.waitForTransform(src_frame, target_frame, now, rospy.Duration(1.0))
+                    parking_trans, _ = self.tf_listener.lookupTransform(src_frame, target_frame, now)
+
+                    self.tf_listener.waitForTransform(car_frame, src_frame, now, rospy.Duration(1.0))
+                    _, car_rot = self.tf_listener.lookupTransform(car_frame, src_frame, now)
+
+                    self.tf_listener.waitForTransform(target_frame, car_frame, now, rospy.Duration(1.0))
+                    _, car_to_marker_rot = self.tf_listener.lookupTransform(target_frame, car_frame, now)
+
                 except Exception as E:
                     rospy.logwarn(E)
                     
-                goal.pose.position.x = trans[0]
-                goal.pose.position.y = trans[2]
-
-                _,_, yaw = euler_from_quaternion(rot)
-                x, y, z, w = quaternion_from_euler(0, 0, yaw)
+                # print(trans, rot)
+                goal.pose.position.x = parking_trans[0]
+                goal.pose.position.y = parking_trans[1]
+                
+                _,_, car_yaw = euler_from_quaternion(car_rot)
+                _,_, car_to_marker_yaw = euler_from_quaternion(car_to_marker_rot)
+                x, y, z, w = quaternion_from_euler(0, 0, car_yaw + car_to_marker_yaw)
                 goal.pose.orientation.x = x
                 goal.pose.orientation.y = y
                 goal.pose.orientation.z = z
@@ -83,6 +96,7 @@ class GoalManager:
 
 
     def reach_cb(self, msg):
+        print(msg)
         if msg.status.text == "Goal reached.":
             self.goal_cnt += 1
 

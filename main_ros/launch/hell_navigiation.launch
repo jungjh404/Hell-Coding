@@ -16,6 +16,8 @@
     <!-- Motor -->
     <include file="$(find xycar_motor)/launch/xycar_motor.launch"/>
     <node pkg="hell_coding" name="init_odom" type="init_odom.py"/>
+    <!-- <node pkg="hell_coding" name="init_odom_ackr" type="init_odom_ackr.py"/> -->
+
 
     <!-- ORB SLAM -->
     <!-- <include file="$(find hell_coding)/launch/orb_slam2_xycar.launch"/> -->
