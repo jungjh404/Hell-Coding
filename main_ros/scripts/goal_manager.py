@@ -5,7 +5,7 @@ import rospy
 import math
 import actionlib
 import tf
-from tf.transformations import quaternion_from_euler
+from tf.transformations import quaternion_from_euler, euler_from_quaternion
 from ar_track_alvar_msgs.msg import AlvarMarkers
 from geometry_msgs.msg import PoseStamped
 from move_base_msgs.msg import MoveBaseActionResult, MoveBaseAction
@@ -55,15 +55,26 @@ class GoalManager:
             alvar_msg = rospy.wait_for_message("/ar_pose_marker", AlvarMarkers, timeout=3)
 
             if len(alvar_msg.markers) != 1:
-                rospy.loginfo("Two or MoreMarkers or No Marker.")
-                pass
+                rospy.logwarn("Two or MoreMarkers or No Marker.")
                 
             else:
-                trans, rot = self.tf_listener.lookupTransform("ar_marker_"+str(alvar_msg.markers[0].id), "map", rospy.Time().now())
-                print(trans, rot)
+                target_frame = "ar_marker_"+str(alvar_msg.markers[0].id)
+                src_frame = "map"
 
+                try:
+                    trans, rot = self.tf_listener.lookupTransform(target_frame, src_frame, self.tf_listener.getLatestCommonTime(target_frame, src_frame))
+                except Exception as E:
+                    rospy.logwarn(E)
+                    
+                goal.pose.position.x = trans[0]
+                goal.pose.position.y = trans[2]
 
-
+                _,_, yaw = euler_from_quaternion(rot)
+                x, y, z, w = quaternion_from_euler(0, 0, yaw)
+                goal.pose.orientation.x = x
+                goal.pose.orientation.y = y
+                goal.pose.orientation.z = z
+                goal.pose.orientation.w = w
 
         return goal
 
@@ -78,6 +89,9 @@ class GoalManager:
             
             else:
                 self.goal_pub.publish(self.goal_msg_generate())
+
+        else:
+            self.goal_pub.publish(self.goal_msg_generate())
 
 
 if __name__ == "__main__":
