@@ -6,6 +6,7 @@ import math
 import actionlib
 import tf
 from tf.transformations import quaternion_from_euler, euler_from_quaternion
+from ar_marker_pose import ar_marker_pose
 from ar_track_alvar_msgs.msg import AlvarMarkers
 from geometry_msgs.msg import PoseStamped
 from move_base_msgs.msg import MoveBaseActionResult, MoveBaseAction
@@ -58,39 +59,7 @@ class GoalManager:
                 rospy.logwarn("Two or MoreMarkers or No Marker.")
                 
             else:
-                target_frame = "ar_marker_"+str(alvar_msg.markers[0].id)
-                car_frame = "base_link"
-                src_frame = "map"
-
-                self.tf_listener.waitForTransform(src_frame, target_frame, rospy.Time(), rospy.Duration(1.0))
-                self.tf_listener.waitForTransform(car_frame, src_frame, rospy.Time(), rospy.Duration(1.0))
-                self.tf_listener.waitForTransform(target_frame, car_frame, rospy.Time(), rospy.Duration(1.0))
-
-                try:
-                    now = rospy.Time.now()
-                    self.tf_listener.waitForTransform(src_frame, target_frame, now, rospy.Duration(1.0))
-                    parking_trans, _ = self.tf_listener.lookupTransform(src_frame, target_frame, now)
-
-                    self.tf_listener.waitForTransform(car_frame, src_frame, now, rospy.Duration(1.0))
-                    _, car_rot = self.tf_listener.lookupTransform(car_frame, src_frame, now)
-
-                    self.tf_listener.waitForTransform(target_frame, car_frame, now, rospy.Duration(1.0))
-                    _, car_to_marker_rot = self.tf_listener.lookupTransform(target_frame, car_frame, now)
-
-                except Exception as E:
-                    rospy.logwarn(E)
-                    
-                # print(trans, rot)
-                goal.pose.position.x = parking_trans[0]
-                goal.pose.position.y = parking_trans[1]
-                
-                _,_, car_yaw = euler_from_quaternion(car_rot)
-                _,_, car_to_marker_yaw = euler_from_quaternion(car_to_marker_rot)
-                x, y, z, w = quaternion_from_euler(0, 0, car_yaw + car_to_marker_yaw)
-                goal.pose.orientation.x = x
-                goal.pose.orientation.y = y
-                goal.pose.orientation.z = z
-                goal.pose.orientation.w = w
+                trans, rot = ar_marker_pose(self.tf_listener, alvar_msg.markers[0].id)
 
         return goal
 
