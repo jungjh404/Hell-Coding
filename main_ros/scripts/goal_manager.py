@@ -60,6 +60,24 @@ class GoalManager:
                 
             else:
                 trans, rot = ar_marker_pose(self.tf_listener, alvar_msg.markers[0].id)
+                
+
+                r,p,y = euler_from_quaternion(rot, axes="rzyz")
+                yaw = math.degrees(y) + 180
+                if yaw > 180:
+                    yaw -= 360
+                
+                goal.pose.position.x = trans[0]
+                goal.pose.position.y = trans[1]
+                
+                target_rot = quaternion_from_euler(0, 0, yaw)
+                goal.pose.orientation.x = target_rot[0]
+                goal.pose.orientation.y = target_rot[1]
+                goal.pose.orientation.z = target_rot[2]
+                goal.pose.orientation.w = target_rot[3]
+            
+        elif target == "stop_line":
+
 
         return goal
 
@@ -78,6 +96,8 @@ class GoalManager:
 
         else:
             self.goal_pub.publish(self.goal_msg_generate())
+
+    def 
 
 
 if __name__ == "__main__":
