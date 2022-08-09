@@ -10,6 +10,11 @@ TebLocalPlannerROS:
   global_plan_overwrite_orientation: True
   max_global_plan_lookahead_dist: 3.0
   feasibility_check_no_poses: 5
+
+  allow_init_with_backwards_motion: True
+  global_plan_viapoint_sep: -1
+  global_plan_prune_distance: 1
+  exact_arc_lenght: False
     
 # Robot
   max_vel_x: 0.26
@@ -72,6 +77,12 @@ TebLocalPlannerROS:
   enable_multithreading: True
   simple_exploration: False
   max_number_classes: 4
+
+  selection_cost_hysteresis: 1.0
+  selection_prefer_initial_scale: 1.0
+  selection_obst_cost_scale: 1.0
+  selection_alternative_time_cost: False
+
   roadmap_graph_no_samples: 15
   roadmap_graph_area_width: 5
   h_signature_prescaler: 0.5
@@ -79,3 +90,13 @@ TebLocalPlannerROS:
   obstacle_keypoint_offset: 0.1
   obstacle_heading_threshold: 0.45
   visualize_hc_graph: False
+
+  # Recovery
+
+  shrink_horizon_backup: True
+  shrink_horizon_min_duration: 10
+  oscillation_recovery: True
+  oscillation_v_eps: 0.1
+  oscillation_omega_eps: 0.1
+  oscillation_recovery_min_duration: 10
+  oscillation_filter_duration: 10
