@@ -7,9 +7,12 @@ import actionlib
 import tf
 from tf.transformations import quaternion_from_euler, euler_from_quaternion
 from ar_marker_pose import ar_marker_pose
+
 from ar_track_alvar_msgs.msg import AlvarMarkers
 from geometry_msgs.msg import PoseStamped
-from move_base_msgs.msg import MoveBaseActionResult, MoveBaseAction
+from move_base_msgs.msg import MoveBaseActionResult, MoveBaseAction, MoveBaseGoal
+# from actionlib_msgs.msg import GoalID
+from xycar_msgs.msg import xycar_motor
 
 
 class GoalManager:
@@ -22,6 +25,7 @@ class GoalManager:
 
         self.rate = rospy.Rate(10)
 
+        # self.cancel_pub = rospy.Publisher("/move_base/cancel", GoalID, queue_size=1)
         self.goal_pub = rospy.Publisher("/move_base_simple/goal", PoseStamped, queue_size=1)
         self.res_sub = rospy.Subscriber("/move_base/result", MoveBaseActionResult, self.reach_cb)
         self.tf_listener = tf.TransformListener()
@@ -75,11 +79,23 @@ class GoalManager:
                 goal.pose.orientation.y = target_rot[1]
                 goal.pose.orientation.z = target_rot[2]
                 goal.pose.orientation.w = target_rot[3]
-            
-        elif target == "stop_line":
 
+        elif target == "t_parking":
+            alvar_msg = rospy.wait_for_message("/ar_pose_marker", AlvarMarkers, timeout=3)
+
+            if len(alvar_msg.markers) != 1:
+                rospy.logwarn("Two or MoreMarkers or No Marker.")
+
+            pass
+        
+        # stop_line -> goal = current position
+        elif target == "stop_line":
+            pass
 
         return goal
+
+    def move_to(self):
+        goal = MoveBaseGoal()
 
 
     def reach_cb(self, msg):
@@ -97,7 +113,6 @@ class GoalManager:
         else:
             self.goal_pub.publish(self.goal_msg_generate())
 
-    def 
 
 
 if __name__ == "__main__":

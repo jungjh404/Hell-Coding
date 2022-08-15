@@ -28,9 +28,6 @@ class Init_Odom:
 
         self.init_odom.publish(msg)
 
-        while not rospy.is_shutdown():
-            self.rate.sleep()
-
 
 if __name__ == "__main__":
     a = Init_Odom()
