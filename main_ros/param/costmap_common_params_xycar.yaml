@@ -9,6 +9,3 @@ inflation_radius: 0.2
 # inscribed circle radius: 0.14 circumscribed circle radius: 0.4713
 cost_scaling_factor: 1
 # larger the cost scaling factor the steeper the decay
-
-observation_sources: scan
-scan: {sensor_frame: base_scan, data_type: LaserScan, topic: scan, marking: true, clearing: true}

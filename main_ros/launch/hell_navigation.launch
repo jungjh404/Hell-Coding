@@ -4,6 +4,7 @@
     <arg name="map_file" default="$(find hell_coding)/map/map.yaml"/>
     <arg name="open_rviz" default="true"/>
     <arg name="move_forward_only" default="false"/>
+    <arg name="goal_manager" default="false"/>
 
     <!-- URDF -->
     <include file="$(find hell_coding_urdf)/launch/display.launch"/>
@@ -12,12 +13,15 @@
     <include file="$(find xycar_lidar)/launch/xycar_lidar.launch" />
     <!-- <include file="$(find xycar_imu)/launch/xycar_imu.launch" /> -->
     <include file="$(find usb_cam)/launch/xycar_cam.launch" />
+    <node pkg="hell_coding" name="hell_ultrasonic" type="hell_ultrasonic.py"/>
     
     <!-- Image Recitification -->
     <node name="image_proc" pkg="image_proc" type="image_proc" ns="usb_cam"/>
 
     <!-- Motor -->
-    <include file="$(find xycar_motor)/launch/xycar_motor.launch"/>
+    <include file="$(find hell_coding)/launch/hell_motor.launch">
+        <arg name="goal_manager" value="$(arg goal_manager)"/>
+    </include>
     <!-- <node pkg="hell_coding" name="init_odom" type="init_odom.py"/> -->
     <!-- <node pkg="hell_coding" name="init_odom_ackr" type="init_odom_ackr.py"/> -->
 
