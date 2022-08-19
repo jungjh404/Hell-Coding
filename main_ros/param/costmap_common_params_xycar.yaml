@@ -5,13 +5,10 @@ raytrace_range: 3.5
 # footprint: [[-0.270, -0.140], [-0.270, 0.140], [0.320, 0.140], [0.320, -0.140]]
 footprint: [[-0.140, -0.140], [-0.140, 0.140], [0.450, 0.140], [0.450, -0.140]] # base_link at the center of rear axle
 
-#robot_radius: 0.17
-
-inflation_radius: 0.15
+inflation_radius: 0.2
 # inscribed circle radius: 0.14 circumscribed circle radius: 0.4713
-cost_scaling_factor: 2.0
+cost_scaling_factor: 1
 # larger the cost scaling factor the steeper the decay
 
-map_type: costmap
 observation_sources: scan
 scan: {sensor_frame: base_scan, data_type: LaserScan, topic: scan, marking: true, clearing: true}

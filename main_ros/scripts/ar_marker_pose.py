@@ -11,17 +11,16 @@ def ar_marker_pose(tf_listener, id):
     target_frame = "ar_marker_"+str(id)
     src_frame = "map"
 
-    tf_listener.waitForTransform(target_frame, src_frame, rospy.Time(), rospy.Duration(1.0))
-
+    tf_listener.waitForTransform(src_frame, target_frame, rospy.Time(), rospy.Duration(1.0))
     try:
         now = rospy.Time.now()
         tf_listener.waitForTransform(target_frame, src_frame, now, rospy.Duration(1.0))
-        trans, rot = tf_listener.lookupTransform(target_frame, src_frame, now)
+        trans, rot = tf_listener.lookupTransform(src_frame, target_frame, now)
 
     except Exception as E:
         rospy.logwarn(E)
         
-    return trans, rot
+    return trans
 
 if __name__ == "__main__":
     import tf
@@ -31,14 +30,8 @@ if __name__ == "__main__":
     alvar_msg = rospy.wait_for_message("/ar_pose_marker", AlvarMarkers, timeout=3)
     tf_listener = tf.TransformListener()
 
-    trans, rot = ar_marker_pose(tf_listener, alvar_msg.markers[0].id)
+    trans = ar_marker_pose(tf_listener, alvar_msg.markers[0].id)
 
-    r,p,y = euler_from_quaternion(rot, axes="rzyz")
-    yaw = math.degrees(y) + 180
-    if yaw > 180:
-        yaw -=  360
-    
-    print(trans, yaw)
     # axes_dict = {
     # 'sxyz': (0, 0, 0, 0), 'sxyx': (0, 0, 1, 0), 'sxzy': (0, 1, 0, 0),
     # 'sxzx': (0, 1, 1, 0), 'syzx': (1, 0, 0, 0), 'syzy': (1, 0, 1, 0),

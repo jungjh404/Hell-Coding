@@ -9,7 +9,7 @@ from tf.transformations import quaternion_from_euler, euler_from_quaternion
 from ar_marker_pose import ar_marker_pose
 
 from ar_track_alvar_msgs.msg import AlvarMarkers
-from geometry_msgs.msg import PoseStamped
+from geometry_msgs.msg import PoseStamped, Quaternion
 from move_base_msgs.msg import MoveBaseActionResult, MoveBaseAction, MoveBaseGoal
 # from actionlib_msgs.msg import GoalID
 from xycar_msgs.msg import xycar_motor
@@ -19,8 +19,8 @@ class GoalManager:
     def __init__(self):
         rospy.init_node("goal_manager", anonymous=True)
         self.goal_cnt = 0
-        self.goal_list = [[5, 0, 0], [10, 0, 90]]
-        # self.goal_list = ["parking"]
+        # self.goal_list = [[5, 0, 0], [10, 0, 90]]
+        self.goal_list = [("parking", [0, -0.5, 90])]
         self.goal_num = len(self.goal_list)
 
         self.rate = rospy.Rate(10)
@@ -56,25 +56,19 @@ class GoalManager:
             goal.pose.orientation.z = z
             goal.pose.orientation.w = w
         
-        elif target == "parking":
+        elif target[0] == "parking":
             alvar_msg = rospy.wait_for_message("/ar_pose_marker", AlvarMarkers, timeout=3)
 
             if len(alvar_msg.markers) != 1:
                 rospy.logwarn("Two or MoreMarkers or No Marker.")
                 
             else:
-                trans, rot = ar_marker_pose(self.tf_listener, alvar_msg.markers[0].id)
+                trans = ar_marker_pose(self.tf_listener, alvar_msg.markers[0].id)
                 
-
-                r,p,y = euler_from_quaternion(rot, axes="rzyz")
-                yaw = math.degrees(y) + 180
-                if yaw > 180:
-                    yaw -= 360
+                goal.pose.position.x = trans[0] + target[1][0]
+                goal.pose.position.y = trans[1] + target[1][1]
                 
-                goal.pose.position.x = trans[0]
-                goal.pose.position.y = trans[1]
-                
-                target_rot = quaternion_from_euler(0, 0, yaw)
+                target_rot = quaternion_from_euler(0, 0, math.radians(target[1][2]))
                 goal.pose.orientation.x = target_rot[0]
                 goal.pose.orientation.y = target_rot[1]
                 goal.pose.orientation.z = target_rot[2]
@@ -91,7 +85,8 @@ class GoalManager:
         # stop_line -> goal = current position
         elif target == "stop_line":
             pass
-
+        
+        print(goal)
         return goal
 
     def move_to(self):
@@ -99,7 +94,7 @@ class GoalManager:
 
 
     def reach_cb(self, msg):
-        print(msg)
+        # print(msg)
         if msg.status.text == "Goal reached.":
             self.goal_cnt += 1
 
@@ -110,9 +105,15 @@ class GoalManager:
             else:
                 self.goal_pub.publish(self.goal_msg_generate())
 
-        else:
-            self.goal_pub.publish(self.goal_msg_generate())
+        # else:
+        #     self.goal_pub.publish(self.goal_msg_generate())
 
+    def euler_to_quat(self, y, p, r):
+        qx = math.sin(r/2) * math.cos(p/2) * math.cos(y/2) - math.cos(r/2) * math.sin(p/2) * math.sin(y/2)
+        qy = math.cos(r/2) * math.sin(p/2) * math.cos(y/2) + math.sin(r/2) * math.cos(p/2) * math.sin(y/2)
+        qz = math.cos(r/2) * math.cos(p/2) * math.sin(y/2) - math.sin(r/2) * math.sin(p/2) * math.cos(y/2)
+        qw = math.cos(r/2) * math.cos(p/2) * math.cos(y/2) + math.sin(r/2) * math.sin(p/2) * math.sin(y/2)
+        return qx, qy, qz, qw
 
 
 if __name__ == "__main__":

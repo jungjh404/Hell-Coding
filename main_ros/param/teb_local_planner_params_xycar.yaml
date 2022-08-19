@@ -8,13 +8,13 @@ TebLocalPlannerROS:
   dt_ref: 0.3
   dt_hysteresis: 0.1
   max_samples: 500  ##
-  global_plan_overwrite_orientation: True
+  global_plan_overwrite_orientation: False
   allow_init_with_backwards_motion: True  ##
-  max_global_plan_lookahead_dist: 10 # default: 3.0
-  global_plan_viapoint_sep: -1  ##
-  # global_plan_prune_distance: 1  ##
+  max_global_plan_lookahead_dist: 3 # default: 3.0
+  global_plan_viapoint_sep: 2  ##
+  global_plan_prune_distance: 3  ##
   exact_arc_length: False  ##
-  feasibility_check_no_poses: 3  # 5 
+  feasibility_check_no_poses: 0  # 5 
   publish_feedback: False ##
 
 # Robot
@@ -22,10 +22,10 @@ TebLocalPlannerROS:
   max_vel_x_backwards: 0.35
   max_vel_y: 0.0 ##
   max_vel_theta: 1.0
-  acc_lim_x: 0.5
+  acc_lim_x: 2.2
   # acc_lim_y: 0.1
   acc_lim_theta: 0.5
-  min_turning_radius: 1.2 # experimental value 1.07
+  min_turning_radius: 1.1 # experimental value 1.07
   wheelbase: 0.34
   cmd_angle_instead_rotvel: True
   footprint_model: # types: "point", "circular", "two_circles", "line", "polygon"
@@ -52,7 +52,7 @@ TebLocalPlannerROS:
   min_obstacle_dist: 0.3
   inflation_dist: 0.35 ##
   include_costmap_obstacles: True
-  costmap_obstacles_behind_robot_dist: 0.3
+  costmap_obstacles_behind_robot_dist: 1.5  # 0.3
   obstacle_poses_affected: 10
   include_dynamic_obstacles: False  ##
   dynamic_obstacle_inflation_dist: 0.35  ##
@@ -79,7 +79,7 @@ TebLocalPlannerROS:
   weight_obstacle: 50
   weight_dynamic_obstacle: 10 # not in use yet
   alternative_time_cost: False # not in use yet
-  weight_viapoint: 1  ##
+  weight_viapoint: 0.5  ##
   weight_adapt_factor: 2  ##
 
 # Homotopy Class Planner
