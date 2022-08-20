@@ -41,7 +41,7 @@ class motor:
         self.motor_type = 0
         deviceSetFunc[self.motor_type]()
         self.set_parameter()
-        self.ros_init(goal_manager=="true")
+        self.ros_init(goal_manager=="true")        
         rospy.spin()
 
     def set_parameter(self):

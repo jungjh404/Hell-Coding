@@ -18,7 +18,7 @@ class Init_Odom:
     def run(self):
         while self.init_odom.get_num_connections() < 1:
             msg = Twist()
-            
+            print(msg)
             msg.linear.x = 0
             msg.linear.y = 0
             msg.linear.z = 0

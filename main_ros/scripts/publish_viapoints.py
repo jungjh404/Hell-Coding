@@ -8,7 +8,7 @@ from nav_msgs.msg import Path
 
 
 def publish_via_points_msg():
-  pub = rospy.Publisher('/move_base_simple/via_points', Path, queue_size=1)
+  pub = rospy.Publisher('/move_base/TebLocalPlannerROS/via_points', Path, queue_size=1)
   rospy.init_node("test_via_points_msg")
 
 
@@ -18,23 +18,32 @@ def publish_via_points_msg():
   
   # Add via-points
   point1 = PoseStamped()
-  point1.pose.position.x = 0.0;
-  point1.pose.position.y = 1.5;
+  point1.pose.position.x = 2.0
+  point1.pose.position.y = 0.3
 
   point2 = PoseStamped()
-  point2.pose.position.x = 2.0;
-  point2.pose.position.y = -0.5;
+  point2.pose.position.x = 4.0
+  point2.pose.position.y = -0.3
 
+  point3 = PoseStamped()
+  point3.pose.position.x = 6.0
+  point3.pose.position.y = 0.0
 
-  via_points_msg.poses = [point1, point2]
+  via_points_msg.poses = [point1, point2, point3]
 
-  r = rospy.Rate(5) # 10hz
+  r = rospy.Rate(1) # 10hz
   t = 0.0
-  while not rospy.is_shutdown():
+
+  pub.publish(via_points_msg)
+  r.sleep()
+  pub.publish(via_points_msg)
+  r.sleep()
+
+  # while not rospy.is_shutdown():
         
-    pub.publish(via_points_msg)
+  #   pub.publish(via_points_msg)
     
-    r.sleep()
+  #   r.sleep()
 
 
 
