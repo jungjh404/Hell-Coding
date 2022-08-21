@@ -29,7 +29,7 @@ class GoalManager:
 
         # self.cancel_pub = rospy.Publisher("/move_base/cancel", GoalID, queue_size=1)
         self.goal_pub = rospy.Publisher("/move_base/goal", MoveBaseActionGoal, queue_size=1)
-        self.feedback_sub = rospy.Publisher("/move_base/feedback", MoveBaseFeedback, self.proximity_cb)
+        # self.feedback_sub = rospy.Publisher("/move_base/feedback", MoveBaseFeedback, self.proximity_cb)
         self.res_sub = rospy.Subscriber("/move_base/result", MoveBaseActionResult, self.reach_cb)
         self.via_pub = rospy.Publisher('/move_base/TebLocalPlannerROS/via_points', Path, queue_size=1)
         self.stop_line = False
@@ -127,32 +127,6 @@ class GoalManager:
         return goal
 
 
-    # def reach_cb(self, msg):
-    #     print(msg)
-    #     if msg.status.text == "Goal reached." and int(msg.status.goal_id.id) == self.goal_cnt:
-    #         self.goal_cnt += 1
-
-    #         clearing = rospy.ServiceProxy('/move_base/clear_costmaps', Empty)
-    #         res = clearing()
-
-    #         if self.via_point_thread is not None:
-    #             self.via_point_thread.join()
-    #             self.via_point_thread = None
-
-    #         if self.goal_cnt >= self.goal_num:
-    #             rospy.loginfo("Mission Finished.")
-    #             exit(0)
-            
-    #         else:
-    #             if type(self.goal_list[self.goal_cnt]) == list and self.goal_list[self.goal_cnt][3] is not None:
-    #                 self.via_point_thread = threading.Thread(target=self.via_points_pub, args=(self.via_points[self.goal_list[self.goal_cnt][3]]))
-    #                 self.via_point_thread.start()
-
-    #             self.goal_pub.publish(self.goal_msg_generate())
-
-    #     else:
-    #         self.goal_pub.publish(self.goal_msg_generate())
-
     def reach_cb(self, msg):
         print(msg)
         if msg.status.text == "Goal reached." and int(msg.status.goal_id.id) == self.goal_cnt:
@@ -161,26 +135,52 @@ class GoalManager:
             clearing = rospy.ServiceProxy('/move_base/clear_costmaps', Empty)
             res = clearing()
 
-            if self.goal_cnt >= self.goal_num:
-                rospy.loginfo("Mission Finished.")
-                exit(0)
-
-        else:
-            self.goal_pub.publish(self.goal_msg_generate())
-
-    def proximity_cb(self, msg):
-        print(msg)
-        if type(self.goal_list[self.goal_cnt]) == list and [msg.position.x, msg.position.y, msg.position.z] == self.goal_list[self.goal_cnt][:3]: #goal coordinates
             if self.via_point_thread is not None:
                 self.via_point_thread.join()
                 self.via_point_thread = None
+
+            if self.goal_cnt >= self.goal_num:
+                rospy.loginfo("Mission Finished.")
+                exit(0)
             
             else:
                 if type(self.goal_list[self.goal_cnt]) == list and self.goal_list[self.goal_cnt][3] is not None:
                     self.via_point_thread = threading.Thread(target=self.via_points_pub, args=(self.via_points[self.goal_list[self.goal_cnt][3]]))
                     self.via_point_thread.start()
+
+                self.goal_pub.publish(self.goal_msg_generate())
+
         else:
             self.goal_pub.publish(self.goal_msg_generate())
+
+    # def reach_cb(self, msg):
+    #     print(msg)
+    #     if msg.status.text == "Goal reached." and int(msg.status.goal_id.id) == self.goal_cnt:
+    #         self.goal_cnt += 1
+
+    #         clearing = rospy.ServiceProxy('/move_base/clear_costmaps', Empty)
+    #         res = clearing()
+
+    #         if self.goal_cnt >= self.goal_num:
+    #             rospy.loginfo("Mission Finished.")
+    #             exit(0)
+
+    #     else:
+    #         self.goal_pub.publish(self.goal_msg_generate())
+
+    # def proximity_cb(self, msg):
+    #     print(msg)
+    #     if type(self.goal_list[self.goal_cnt]) == list and [msg.position.x, msg.position.y, msg.position.z] == self.goal_list[self.goal_cnt][:3]: #goal coordinates
+    #         if self.via_point_thread is not None:
+    #             self.via_point_thread.join()
+    #             self.via_point_thread = None
+            
+    #         else:
+    #             if type(self.goal_list[self.goal_cnt]) == list and self.goal_list[self.goal_cnt][3] is not None:
+    #                 self.via_point_thread = threading.Thread(target=self.via_points_pub, args=(self.via_points[self.goal_list[self.goal_cnt][3]]))
+    #                 self.via_point_thread.start()
+    #     else:
+    #         self.goal_pub.publish(self.goal_msg_generate())
 
 if __name__ == "__main__":
     try:

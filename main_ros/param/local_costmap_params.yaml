@@ -16,6 +16,7 @@ local_costmap:
   - {name: obstacle_layer, type: "costmap_2d::VoxelLayer"}
   - {name: sonar_layer,   type: "range_sensor_layer::RangeSensorLayer"}
   - {name: inflation_layer, type: "costmap_2d::InflationLayer"}
+  - {name: lane_layer, type: "costmap_2d::VoxelLayer"}
   
   #Configuration for the sensors that the costmap will use to update a map
   obstacle_layer:   
@@ -26,3 +27,7 @@ local_costmap:
     topics: ["/us_back", "/us_right", "/us_left", "/us_back_left", "/us_back_right"]
     clear_on_max_reading: true
   
+  lane_layer:
+    observation_sources: lane_scan
+    scan: {sensor_frame: base_scan, data_type: LaserScan, topic: lane_scan, marking: true, clearing: true}
+
