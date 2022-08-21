@@ -1,29 +1,25 @@
 #! /usr/bin/env python
 # -*- coding: utf-8 -*-
 
-from turtle import left
 import numpy as np
 import cv2, math
-import rospy, rospkg, time
+import rospy
+import pandas as pd
 from sensor_msgs.msg import Image
 from cv_bridge import CvBridge
 #from xycar_msgs.msg import xycar_motor
 from math import *
-import signal
-import sys
-import os
-import random
 from sensor_msgs.msg import LaserScan
-import pandas as pd  
 
 
-from hell_coding.msg import _IsStop
+
+# from hell_coding.msg import _IsStop
 
 class Publishint():
     def initfunc(self, llx , rlx, lly, rly):
         #rospy.init_node('laser_scan_publisher')
 
-        scan_pub = rospy.Publisher('scan', LaserScan, queue_size=50)
+        scan_pub = rospy.Publisher('lane_scan', LaserScan, queue_size=1)
     
         num_readings = 5000 #1000 does not warp angle
         laser_frequency = 40
@@ -49,7 +45,7 @@ class Publishint():
             if (llx[i] > 0):
                 theta_l.append(math.atan(lly[i]/llx[i]))
             else:
-                theta_l.append(math.atan(lly[i]/llx[i]) + 3.14)
+                theta_l.append(math.atan(lly[i]/llx[i]) + math.pi)
             dist_l.append(math.sqrt( math.pow(llx[i],2)+math.pow(lly[i],2) ))
         
         for i in range(0, len(rlx)):
@@ -57,7 +53,7 @@ class Publishint():
             if (rlx[i] > 0):
                 theta_r.append(math.atan(rly[i]/rlx[i]))
             else:
-                theta_r.append(math.atan(rly[i]/rlx[i]) + 3.14)
+                theta_r.append(math.atan(rly[i]/rlx[i]) + math.pi)
             dist_r.append(math.sqrt( math.pow(rlx[i],2)+math.pow(rly[i],2) ))
             # sort is need because lidar spins continously
             # if condition is not met, laserscan is not shown
@@ -167,7 +163,6 @@ class Publishint():
         #samp_final_r.reset_index(drop = True)
 
         #################################################################################
-
         current_time = rospy.Time.now()
     
         scan = LaserScan()
@@ -175,23 +170,20 @@ class Publishint():
             # range is in [m]
         scan.header.stamp = current_time
         scan.header.frame_id = 'base_scan'
-        scan.angle_min = 0
-        scan.angle_max = 3.14
-        scan.angle_increment = 3.14 / num_readings
+        scan.angle_min = -math.pi/2
+        scan.angle_max = math.pi/2
+        scan.angle_increment = math.pi / num_readings
         scan.time_increment = (1.0 / laser_frequency) / (num_readings)
         scan.range_min = 0.0
         scan.range_max = 100.0
-    
-        scan.ranges = []
-        scan.intensities = []
+        scan.ranges = [0] * 5000
+        scan.intensities = [0] * 5000
 
         # r, theta = np.meshgrid(dist_r, theta_r)
         templ=samp_final_l['degree'].values.tolist()
         tempr=samp_final_r['degree'].values.tolist()
         distl=samp_final_l['distance'].values.tolist()
         distr=samp_final_r['distance'].values.tolist()
-
-
 
         j = 0
         k = 0
@@ -202,35 +194,25 @@ class Publishint():
                 #if theta is within the increments
             
             if (j < samp_final_l['degree'].count() and abs(i * scan.angle_increment -templ[j]) < error ):
-                scan.ranges.append(distl[j])
-                scan.intensities.append(1)
-                j+=1
+                try:
+                    idx = int(templ[j] / math.pi * num_readings)
+                    scan.ranges[idx] = distl[j]
+                    scan.intensities[idx] = 1
+                    j+=1
+                except IndexError:
+                    pass
                 #if use pass, there is time delay, resulting in error
-                
-                
-            else:
-                #is it fine to make huge to ignore?????
-                scan.ranges.append(1)
-                #scan.ranges.append(random.random())  # fake data
-                scan.intensities.append(3)  # fake data
-                #print(i * scan.angle_increment)
 
-            
+        for i in range(0, num_readings):
             if (k < samp_final_r['degree'].count() and abs(i * scan.angle_increment - tempr[k]< error )): #samp_final_r.iloc[k][0])
-                scan.ranges.append(distr[k])#samp_final_r.iloc[k][1]
-                scan.intensities.append(1)
-                k+=1
-                #if use pass, there is time delay, resulting in error
-            else:
-                #is it fine to make huge to ignore?????
-                scan.ranges.append(1)
-                #scan.ranges.append(random.random())  # fake data
-                scan.intensities.append(3)  # fake data
-                #print('else')
-                #print(i * scan.angle_increment)
-            
+                try:
+                    idx = int(tempr[k] / math.pi * num_readings)
+                    scan.ranges[idx] = distr[k]
+                    scan.intensities[idx] = 1
+                    k+=1
+                except IndexError:
+                    pass
         scan_pub.publish(scan)
-
 
 
 
@@ -238,14 +220,14 @@ class Publishint():
 #=============================================
 # ???��??? Ctrl-C ???????? ???��?? ?????? ???? ??
 # ?? ????��??? ????? ???? ???
-#=============================================
-def signal_handler(sig, frame):
-    import time
-    time.sleep(3)
-    os.system('killall -9 python rosout')
-    sys.exit(0)
+# #=============================================
+# def signal_handler(sig, frame):
+#     import time
+#     time.sleep(3)
+#     os.system('killall -9 python rosout')
+#     sys.exit(0)
 
-signal.signal(signal.SIGINT, signal_handler)
+# signal.signal(signal.SIGINT, signal_handler)
 
 #==============================================
 # ???��?????? ????? ????, ??????? ?????map
@@ -269,18 +251,8 @@ def img_callback(data):
     global image
     image = bridge.imgmsg_to_cv2(data, "bgr8")
 
-def drive(angle, speed):
-
-    global motor
-
-    #motor_msg = xycar_motor()
-    #motor_msg.angle = angle
-    #motor_msg.speed = speed
-
-    #motor.publish(motor_msg)
 
 def warp_image(img, src, dst, size):
-    # ī�޶󿡼� �޾ƿ� �̹����� ������ ��ȯ
     M = cv2.getPerspectiveTransform(src, dst)
     Minv = cv2.getPerspectiveTransform(dst, src)
     warp_img = cv2.warpPerspective(img, M, size, flags=cv2.INTER_LINEAR)
@@ -312,10 +284,6 @@ def warp_process_image(img):
     #lefty_current = 
     #righty_current = 
     #print(leftx_current - rightx_current)
-
-
-
-
 
     if (leftx_current >= midpoint):
         leftx_current = int(midpoint - 355 / 2)
@@ -355,16 +323,16 @@ def warp_process_image(img):
         cv2.rectangle(out_img,(win_xll,win_yl),(win_xlh,    win_yh),    (0,255,0), 2) 
         cv2.rectangle(out_img,(win_xrl,win_yl),(win_xrh,    win_yh),    (0,255,0), 2) 
 
-        good_left_inds = ((nz[0] >= win_yl)&(nz[0] < win_yh)&   (nz    [1] >= win_xll)&(nz[1] < win_xlh)).nonzero()    [0]
-        good_right_inds = ((nz[0] >= win_yl)&(nz[0] < win_yh)   &(nz   [1] >= win_xrl)&(nz[1] < win_xrh)).nonzero()    [0]
+        good_left_inds = ((nz[0] >= win_yl)&(nz[0] < win_yh) & (nz[1] >= win_xll)&(nz[1] < win_xlh)).nonzero()[0]
+        good_right_inds = ((nz[0] >= win_yl)&(nz[0] < win_yh) & (nz[1] >= win_xrl)&(nz[1] < win_xrh)).nonzero()[0]
 
         left_lane_inds.append(good_left_inds)
         right_lane_inds.append(good_right_inds)
 
         if len(good_left_inds) > minpix:
-            leftx_current = np.int(np.mean(nz[1]    [good_left_inds])   )
+            leftx_current = np.int(np.mean(nz[1][good_left_inds]))
         if len(good_right_inds) > minpix:        
-            rightx_current = np.int(np.mean(nz[1]       [good_right_inds]))
+            rightx_current = np.int(np.mean(nz[1][good_right_inds]))
 
         
         lx.append(leftx_current)
@@ -375,9 +343,6 @@ def warp_process_image(img):
 
     left_lane_inds = np.concatenate(left_lane_inds)
     right_lane_inds = np.concatenate(right_lane_inds)
-
-    
-
 
     lfit = np.polyfit(np.array(ly),np.array(lx),2)
     rfit = np.polyfit(np.array(ry),np.array(rx),2)
@@ -420,10 +385,6 @@ def warp_process_image(img):
     #print(len(rlx_pix))
     #print(len(rly_pix))
 
-
-
-    
-
     return lfit, rfit, llx_pix, rlx_pix, lly_pix, rly_pix
 
 def x_pix(a):
@@ -432,28 +393,6 @@ def y_pix(a):
     return (480 - a + 107)*0.00145
 
 
-def lane_tracking(left_line_angle, right_line_angle, curr_position):
-    # Lane tracking algorithm here
-    lane_angle = -(0.5*left_line_angle + 0.5*right_line_angle)
-
-    k1 = 0.7  # P gain
-    k2 = 400   # Distance parameter
-
-    if -0.2 < curr_position < 0.2 :  # ?? ?? ???? ??????? ?????? ???
-        k2 = 400
-    
-    elif curr_position > 0.5 or curr_position < -0.5 :  # ?????? ?????? ????? ??
-        k2 = 250
-
-    else:   # ?? ????? ??? ????? linear ???
-        k2 = -500*abs(curr_position) + 500
-
-    steer_angle = lane_angle * k1 + math.atan(-180 * (curr_position) / k2) * 180 / math.pi
-
-    if steer_angle * lane_angle < 0:
-        steer_angle = lane_angle * 2.5
-
-    return steer_angle
 ####################################################################################
 ################################testing#############################################
 
@@ -536,7 +475,7 @@ def start():
     #=========================================
     rospy.init_node('driving')
     #motor = rospy.Publisher('xycar_motor', xycar_motor, queue_size=1)
-    image_sub = rospy.Subscriber("/usb_cam/image_rect/",Image,img_callback)
+    image_sub = rospy.Subscriber("/usb_cam/image_rect", Image, img_callback)
     
     print ("----- Xycar self driving -----")
 
@@ -631,54 +570,15 @@ def start():
         global right_fit
 
         left_fit, right_fit,lxp,rxp,lyp,ryp = warp_process_image(warp_img)
-
         
         pub.initfunc(lxp,rxp,lyp,ryp)
-
-
-
-        left_fit = np.polyfit(np.array(ly),np.array(lx),1)
-        right_fit = np.polyfit(np.array(ry),np.array(rx),1)
-        
-        line_left = np.poly1d(left_fit)
-        line_right = np.poly1d(right_fit)
-        
-        left_line_angle = math.degrees(math.atan(line_left[1]))
-        right_line_angle = math.degrees(math.atan(line_right[1]))
-        
-        shift_const = 355
-
-        left_position = ((320 - float(lx[3])) / shift_const) * 2 - 1
-        right_position = -((-320 + float(rx[4])) / shift_const) * 2 + 1
-        
-        position = 0
-        
-        if abs(math.degrees(math.atan(line_right[1]))) < 0.05:
-            position = 0.9*left_position + 0.1*right_position
-        
-        elif abs(math.degrees(math.atan(line_left[1]))) < 0.05:
-            position = 0.1*left_position + 0.9*right_position
-        
-        else:
-            position = (left_position+right_position)/2
-        
-        angle = lane_tracking(left_line_angle, right_line_angle, position)               
-        
-        speed = 40
-        
-        if abs(angle) > 7:
-            speed = 25
-        
-        # ??????? ???? ?????? ??????? ???��???
-        cv2.putText(out_img, "angle: "+str(round(angle,1)), (240,50), cv2.FONT_HERSHEY_SIMPLEX, 1, (255,255,255), 2)
-        cv2.putText(out_img, "speed: "+str(speed), (240,100), cv2.FONT_HERSHEY_SIMPLEX, 1, (255,255,255), 2)
         
         cv2.imshow("out_img",out_img)
         cv2.imshow("warp_img", warp_img)
         cv2.waitKey(1)
 
-
-        drive(angle, speed)
+        # r = rospy.Rate(10)
+        # r.sleep()
 
 
 #=============================================
@@ -687,5 +587,7 @@ def start():
 # start() ????? ???????? ???? ?????. 
 #=============================================
 if __name__ == '__main__':
-    start()
-    #sys.stdout.close()
+    try:
+        start()
+    except KeyboardInterrupt:
+        exit(0)
