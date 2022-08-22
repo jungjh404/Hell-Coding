@@ -6,8 +6,7 @@ import math
 import actionlib
 import tf
 import threading
-
-from tf.transformations import quaternion_from_euler
+from goal import Goal
 from ar_marker_pose import ar_marker_pose
 
 from ar_track_alvar_msgs.msg import AlvarMarkers
@@ -21,12 +20,12 @@ from std_srvs.srv import Empty
 class GoalManager:
     def __init__(self):
         self.goal_cnt = 0
-        # self.goal_list = [[6, 0, 0, 0], [8, 0, 30, None]] #x,y,yaw, via_point_num
-        # self.via_points = [[(2, 0.3), (4, -0.3), (6, 0)]]
-        # self.goal_list = [("p_parking", [0, -0.5, 90])]
-        self.goal_list = [("t_parking_pre", [2, 0, 0]), ("t_parking", [None, None, -90])]
+        self.goal_list = [
+                        Goal(x=2, y=0, yaw=0), 
+                        Goal(x=4, y=0, yaw=0, via_points=[(3,0)])
+                        ]
         self.goal_num = len(self.goal_list)
-
+        self.marker_to_goal_dict ={1:0, 2:1, 8:2} # Goal: goal_idx
         self.rate = rospy.Rate(10)
 
         # self.cancel_pub = rospy.Publisher("/move_base/cancel", GoalID, queue_size=1)
@@ -46,7 +45,7 @@ class GoalManager:
 
         if type(self.goal_list[self.goal_cnt]) == list and self.goal_list[self.goal_cnt][3] is not None:
             rospy.loginfo("Thread Initialized!")
-            self.via_point_thread = threading.Thread(target=self.via_points_pub, args=(self.via_points[self.goal_list[self.goal_cnt][3]], ))
+            self.via_point_thread = threading.Thread(target=self.via_points_pub, args=(self.goal_list[self.goal_cnt].via_points,))
             self.via_point_thread.start()
 
         self.goal_pub.publish(self.goal_msg_generate())
@@ -80,92 +79,21 @@ class GoalManager:
         goal.header.seq = self.goal_cnt
         goal.goal_id.id = str(self.goal_cnt)
 
-        target = self.goal_list[self.goal_cnt]
-
         goal.goal.target_pose.header.frame_id = "map"
         goal.goal.target_pose.header.stamp.secs = goal.header.stamp.secs
         goal.goal.target_pose.header.stamp.nsecs = goal.header.stamp.nsecs
         goal.goal.target_pose.header.seq = self.goal_cnt
 
-        if type(target) == list:
-            goal.goal.target_pose.pose.position.x = target[0]
-            goal.goal.target_pose.pose.position.y = target[1]
+        target = self.goal_list[self.goal_cnt]
 
-            x, y, z, w = quaternion_from_euler(0, 0, math.radians(target[2]))
-            goal.goal.target_pose.pose.orientation.x = x
-            goal.goal.target_pose.pose.orientation.y = y
-            goal.goal.target_pose.pose.orientation.z = z
-            goal.goal.target_pose.pose.orientation.w = w
+        goal.goal.target_pose.pose.position = target.xy_to_point()
+        goal.goal.target_pose.pose.orientation = target.yaw_to_quaternion()
         
-        elif target[0] == "p_parking":
-            alvar_msg = rospy.wait_for_message("/ar_pose_marker", AlvarMarkers, timeout=3)
-
-            if len(alvar_msg.markers) == 0:
-                rospy.logwarn("No Marker.")
-                
-            else:
-                for marker in alvar_msg.markers:
-                    if marker.id == 2:
-                        trans = ar_marker_pose(self.tf_listener, alvar_msg.markers[0].id)
-                        
-                        goal.goal.target_pose.pose.position.x = trans[0] + target[1][0]
-                        goal.goal.target_pose.pose.position.y = trans[1] + target[1][1]
-                        
-                        target_rot = quaternion_from_euler(0, 0, math.radians(target[1][2]))
-                        goal.goal.target_pose.pose.orientation.x = target_rot[0]
-                        goal.goal.target_pose.pose.orientation.y = target_rot[1]
-                        goal.goal.target_pose.pose.orientation.z = target_rot[2]
-                        goal.goal.target_pose.pose.orientation.w = target_rot[3]
-
-        elif target == "t_parking":
-            alvar_msg = rospy.wait_for_message("/ar_pose_marker", AlvarMarkers, timeout=3)
-
-            if len(alvar_msg.markers) == 0:
-                rospy.logwarn("No Marker.")
-                
-            else:
-                for marker in alvar_msg.markers:
-                    if marker.id == 8:
-                        trans = ar_marker_pose(self.tf_listener, alvar_msg.markers[0].id)
-                        
-                        goal.goal.target_pose.pose.position.x = trans[0] + target[1][0]
-                        goal.goal.target_pose.pose.position.y = trans[1] + target[1][1]
-                        
-                        target_rot = quaternion_from_euler(0, 0, math.radians(target[1][2]))
-                        goal.goal.target_pose.pose.orientation.x = target_rot[0]
-                        goal.goal.target_pose.pose.orientation.y = target_rot[1]
-                        goal.goal.target_pose.pose.orientation.z = target_rot[2]
-                        goal.goal.target_pose.pose.orientation.w = target_rot[3]
-        
-        elif target == "t_parking_pre":
-            alvar_msg = rospy.wait_for_message("/ar_pose_marker", AlvarMarkers, timeout=3)
-
-            if len(alvar_msg.markers) == 0:
-                rospy.logwarn("No Marker.")
-                
-            else:
-                for marker in alvar_msg.markers:
-                    if marker.id == 8:
-                        trans = ar_marker_pose(self.tf_listener, alvar_msg.markers[0].id)
-                        
-                        goal.goal.target_pose.pose.position.x = trans[0] + target[1][0]
-                        goal.goal.target_pose.pose.position.y = trans[1] + target[1][1]
-                        
-                        target_rot = quaternion_from_euler(0, 0, math.radians(target[1][2]))
-                        goal.goal.target_pose.pose.orientation.x = target_rot[0]
-                        goal.goal.target_pose.pose.orientation.y = target_rot[1]
-                        goal.goal.target_pose.pose.orientation.z = target_rot[2]
-                        goal.goal.target_pose.pose.orientation.w = target_rot[3]
-        
-        elif target == "stop_line":
-            pass
-        
-        rospy.loginfo("#%d: %f %f %f", self.goal_cnt, target[0], target[1], target[2])
+        rospy.loginfo("#%d: %f %f %f", self.goal_cnt, target.x+target.x_diff, target.y+target.y_diff, target.yaw)
         return goal
 
 
     def reach_cb(self, msg):
-        print(msg)
         if msg.status.text == "Goal reached." and int(msg.status.goal_id.id) == self.goal_cnt:
             self.goal_cnt += 1
 
@@ -181,8 +109,8 @@ class GoalManager:
                 exit(0)
             
             else:
-                if type(self.goal_list[self.goal_cnt]) == list and self.goal_list[self.goal_cnt][3] is not None:
-                    self.via_point_thread = threading.Thread(target=self.via_points_pub, args=(self.via_points[self.goal_list[self.goal_cnt][3]]))
+                if self.goal_list[self.goal_cnt].via_points is not None:
+                    self.via_point_thread = threading.Thread(target=self.via_points_pub, args=(self.via_points[self.goal_list[self.goal_cnt].via_points]))
                     self.via_point_thread.start()
 
                 self.goal_pub.publish(self.goal_msg_generate())
@@ -193,17 +121,11 @@ class GoalManager:
 
     def ar_cb(self, msg):
         for marker in msg.markers:
-            if marker.id == 8:
-                trans = ar_marker_pose(self.tf_listener, marker.id)
+            target = self.marker_to_goal_dict[marker.id]
+            trans = ar_marker_pose(self.tf_listener, marker.id)
                 
-                goal.goal.target_pose.pose.position.x = trans[0] + target[1][0]
-                goal.goal.target_pose.pose.position.y = trans[1] + target[1][1]
-                
-                target_rot = quaternion_from_euler(0, 0, math.radians(target[1][2]))
-                goal.goal.target_pose.pose.orientation.x = target_rot[0]
-                goal.goal.target_pose.pose.orientation.y = target_rot[1]
-                goal.goal.target_pose.pose.orientation.z = target_rot[2]
-                goal.goal.target_pose.pose.orientation.w = target_rot[3]
+            target.x = trans[0]
+            target.y = trans[1]
 
     # def reach_cb(self, msg):
     #     print(msg)
