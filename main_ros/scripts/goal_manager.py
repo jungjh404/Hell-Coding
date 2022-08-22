@@ -25,7 +25,7 @@ class GoalManager:
                         Goal(x=4, y=0, yaw=0, via_points=[(3,0)])
                         ]
         self.goal_num = len(self.goal_list)
-        self.marker_to_goal_dict ={1:0, 2:1, 8:2}
+        self.marker_to_goal_dict ={1:0, 2:1, 8:2} # Goal: goal_idx
         self.rate = rospy.Rate(10)
 
         # self.cancel_pub = rospy.Publisher("/move_base/cancel", GoalID, queue_size=1)
