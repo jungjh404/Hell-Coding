@@ -353,7 +353,7 @@ red, green, blue, yellow = (0, 0, 255), (0, 255, 0), (255, 0, 0), (0, 255, 255)
 stopline_threshold = 200 #125
 area_threshold = 2000
 length_threshold = 2000#300
-'''  
+  
 def detect(img):
     
     #return True if stopline is detected else False
@@ -408,7 +408,7 @@ def detect(img):
     #cv2.imshow('stopline', bev_copy)
     
     return detected        
-'''
+
 ####################################################################################
 
 
@@ -511,21 +511,21 @@ def start():
         ], dtype = np.float32)
 
 
-        warp_img, _, _ = warp_image(image, warp_src, warp_dist, (warp_img_w, warp_img_h))
+        #warp_img, _, _ = warp_image(image, warp_src, warp_dist, (warp_img_w, warp_img_h))
         warp_det_img, _, _ = warp_image(image, warp_det_src, warp_det_dist, (warp_img_w, warp_img_h))
-        #detect(warp_det_img)
-        #cv2.imshow("warp_det_img", warp_det_img)
+        detect(warp_det_img)
+        cv2.imshow("warp_det_img", warp_det_img)
         #cv2.imshow("warp_img", warp_img)
 
         global left_fit
         global right_fit
 
-        left_fit, right_fit,lxp,rxp,lyp,ryp = warp_process_image(warp_img)
+        #left_fit, right_fit,lxp,rxp,lyp,ryp = warp_process_image(warp_img)
         
-        pub.initfunc(lxp,rxp,lyp,ryp)
+        #pub.initfunc(lxp,rxp,lyp,ryp)
         
-        cv2.imshow("out_img",out_img)
-        cv2.imshow("warp_img", warp_img)
+        #cv2.imshow("out_img",out_img)
+        #cv2.imshow("warp_img", warp_img)
         cv2.waitKey(1)
 
         # r = rospy.Rate(10)
