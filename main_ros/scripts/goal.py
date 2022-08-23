@@ -19,6 +19,6 @@ class Goal:
         return Point(self.x + self.x_diff, self.y + self.y_diff, 0)
     
     def yaw_to_quaternion(self):
-        return Quaternion(quaternion_from_euler(0, 0, math.radians(self.yaw)))
+        return Quaternion(*quaternion_from_euler(0, 0, math.radians(self.yaw)))
     
     
