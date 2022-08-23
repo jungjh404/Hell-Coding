@@ -21,8 +21,24 @@ class GoalManager:
     def __init__(self):
         self.goal_cnt = 0
         self.goal_list = [
-                        Goal(x=2, y=0, yaw=0), 
-                        Goal(x=4, y=0, yaw=0, via_points=[(3,0)])
+                        Goal(x=0.612760,    y=0.399775,     yaw=math.degrees(-0.1275164)),        # start point
+                        Goal(x=4.953308,    y=0.020134,     yaw=math.degrees(-0.1056652)),        # p-parking tag found
+                        Goal(x=6.787442,    y=-1.127816,    yaw=math.degrees(-0.0906591)),        # p-parking complete
+                        Goal(x=8.261093,    y=-0.277736,    yaw=math.degrees(-0.1040991)),        # p-parking exit
+                        Goal(x=14.227601,   y=-1.209821,    yaw=math.degrees(0.8419409)),         # 1st corner (in ternnel)
+                        Goal(x=14.748132,   y=1.421688,     yaw=math.degrees(1.4447077)),         # t-parking tag found
+                        Goal(x=15.346061,   y=4.123437,     yaw=math.degrees(1.4601398)),         # just before t-parking complete
+                        Goal(x=15.168897,   y=4.699220,     yaw=math.degrees(1.8925488)),         # rotation for t-parking start
+                        Goal(x=15.766825,   y=3.591946,     yaw=math.degrees(3.0090416)),         # t-parking complete
+                        Goal(x=15.157824,   y=4.957056,     yaw=math.degrees(1.4670029)),         # t-parking exit
+                        Goal(x=15.763900,   y=7.646256,     yaw=math.degrees(2.4558618)),         # 2nd corner
+                        Goal(x=9.746145,    y=8.729162,     yaw=math.degrees(3.0850491)),         # just before stop line
+                        Goal(x=1.110168,    y=9.689941,     yaw=math.degrees(-2.6658999)),        # 3rd corner (just before warigari)
+                        Goal(x=0.757480,    y=7.121173,     yaw=math.degrees(-1.5707963)),        # warigari 1
+                        Goal(x=0.066044,    y=5.416704,     yaw=math.degrees(-1.675673)),         # warigari 2
+                        Goal(x=0.355482,    y=3.358477,     yaw=math.degrees(-1.6099938)),        # warigari 3
+                        Goal(x=-0.802270,   y=1.863046,     yaw=math.degrees(-1.5880358)),        # warigari 4
+                        Goal(x=-0.705791,   y=0.978651,     yaw=math.degrees(-0.8345376))         # 4th corner (just before start 
                         ]
         self.goal_num = len(self.goal_list)
         self.marker_to_goal_dict ={1:0, 2:1, 8:2} # Goal: goal_idx
