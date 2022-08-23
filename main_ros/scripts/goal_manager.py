@@ -97,6 +97,7 @@ class GoalManager:
 
                 self.via_pub.publish(via_points_msg)
                 rospy.loginfo("current viapoint: (%f, %f)", next_viapoint.pose.position.x , next_viapoint.pose.position.y)
+                self.via_point_update_flag = False
                 r.sleep()
 
 
