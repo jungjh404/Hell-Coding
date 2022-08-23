@@ -98,8 +98,6 @@ class Publishint():
         smp4 = s4[::cnt(s4)]
         
         smp_fin = smp1 + smp2 + smp3 + smp4
-        print(len(smp1))
-        print(len(smp_fin))
         rmp1 = p1[::cnt(p1)]
         rmp2 = p2[::cnt(p2)]
         rmp3 = p3[::cnt(p3)]
@@ -117,8 +115,8 @@ class Publishint():
             # range is in [m]
         scan.header.stamp = current_time
         scan.header.frame_id = 'base_scan'
-        scan.angle_min = -math.pi/2
-        scan.angle_max = math.pi/2
+        scan.angle_min = math.pi
+        scan.angle_max = 0
         scan.angle_increment = math.pi / num_readings
         scan.time_increment = (1.0 / laser_frequency) / (num_readings)
         scan.range_min = 0.0
@@ -142,7 +140,6 @@ class Publishint():
                 try:
                     idx = int(smp_fin[j][0] / math.pi * num_readings)
                     scan.ranges[idx] = smp_fin[j][1]
-                    print(smp_fin[j][1])
                     scan.intensities[idx] = 1
                     j+=1
                 except IndexError:
@@ -154,7 +151,6 @@ class Publishint():
                 try:
                     idx = int(rmp_fin[k][0] / math.pi * num_readings)
                     scan.ranges[idx] = rmp_fin[k][1]
-                    print(rmp_fin[k][1])
                     scan.intensities[idx] = 1
                     k+=1
                 except IndexError:
@@ -432,7 +428,7 @@ def start():
     #motor = rospy.Publisher('xycar_motor', xycar_motor, queue_size=1)
     image_sub = rospy.Subscriber("/usb_cam/image_rect", Image, img_callback)
     
-    print ("----- Xycar self driving -----")
+    rospy.loginfo("Lane_to_Scan Initializaed!")
 
     # ???�� ???? ?????? ?????? ?????? ????.
     while not image.size == (Width * Height * 3):

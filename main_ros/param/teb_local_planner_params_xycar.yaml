@@ -18,7 +18,7 @@ TebLocalPlannerROS:
   publish_feedback: False ##
 
 # Robot
-  max_vel_x: 4 #0.4
+  max_vel_x: 1 #0.4
   max_vel_x_backwards: 0.35
   max_vel_y: 0.0 ##
   max_vel_theta: 4 #1.0

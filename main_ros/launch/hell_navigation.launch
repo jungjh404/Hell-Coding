@@ -12,7 +12,7 @@
     <!-- Sensor -->
     <include file="$(find xycar_lidar)/launch/xycar_lidar.launch" />
     <!-- <include file="$(find xycar_imu)/launch/xycar_imu.launch" /> -->
-    <!-- <include file="$(find usb_cam)/launch/xycar_cam.launch" /> -->
+    <include file="$(find usb_cam)/launch/xycar_cam.launch" />
     <node pkg="hell_coding" name="hell_ultrasonic" type="hell_ultrasonic.py"/>
     
     <!-- Image Recitification -->
