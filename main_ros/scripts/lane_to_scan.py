@@ -351,13 +351,8 @@ def y_pix(a):
 ####################################################################################
 ################################testing#############################################
 
-red, green, blue, yellow = (0, 0, 255), (0, 255, 0), (255, 0, 0), (0, 255, 255)
+pix_threshold = 0.07
 
-
-stopline_threshold = 200 #125
-area_threshold = 2000
-length_threshold = 2000#300
-'''  
 def detect(img):
     
     #return True if stopline is detected else False
@@ -365,54 +360,23 @@ def detect(img):
     bev = img
     blur = cv2.GaussianBlur(bev, (5, 5), 0)
     _, L, _ = cv2.split(cv2.cvtColor(blur, cv2.COLOR_BGR2HLS))
-    #_, lane = cv2.threshold(L, stopline_threshold, 255, cv2.THRESH_BINARY)
     lane = cv2.adaptiveThreshold(L, 255, cv2.ADAPTIVE_THRESH_MEAN_C, cv2.THRESH_BINARY_INV, 21, 10)
-    _, contours, _ = cv2.findContours(lane, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
-    bev_copy = bev.copy()
-    #?��?��?�� ?���??�� 그려주기
-    bev_copy = cv2.rectangle(bev_copy, (0,0), (Width, Height*3/4), (0,0,0), -1)
-    cv2.waitKey(1)
-    cv2.drawContours(image=bev_copy, contours=contours, contourIdx=-1, color=(0, 255, 0), thickness=2, lineType=cv2.LINE_AA)
-    #bev_copy = cv2.rectangle(bev_copy, (0,0), (Width, Height*3/4), (0,0,0), -1)
-    detected = False
-    for cont in contours:
-        
-        length = cv2.arcLength(cont, True)
-        area = cv2.contourArea(cont)
-        
-        #if not ((area > area_threshold) and (length > length_threshold)):
-        #    continue
-        #
-        #if len(cv2.approxPolyDP(cont, length*0.02, True)) != 4:
-        #    continue
-        
-        #629, 406]], dtype=int32), array([[613, 371]], dtype=int32), array([[610, 406]], dtype=int32), array([[ 60, 425]], dtype=int32))
-        
-        x, y, w, h = cv2.boundingRect(cont)
-        center = (x + int(w/2), y + int(h/2))
-        _, width, _ = bev_copy.shape
-        
-        
-        if (w<50):
-            continue
-        print(w,h)
-        cv2.rectangle(bev_copy, (x, y), (x + w, y + h), blue, 2)
-        if (w > 200) and (h > 200):
-            cv2.rectangle(bev_copy, (x, y), (x + w, y + h), red, 2)
-            p1, p2, p3, p4 = cv2.approxPolyDP(cont, length*0.02, True)
-            print(p1,p2,p3,p4)
-            
-            detected = True
-            rospy.Publisher("is_stop", _IsStop, queue_size = 1)
-        
-    if not detected:
-        print("Lane is not detected")
-    else:
-        print("Lane is detected")
-    #cv2.imshow('stopline', bev_copy)
+    number_of_white_pix = np.sum(lane == 255)
+    number_of_black_pix = np.sum(lane == 0)
+    total_num_of_pix = number_of_white_pix + number_of_black_pix
     
-    return detected        
-'''
+    #print('Number of white pixels:', number_of_white_pix)
+    #print('Number of black pixels:', number_of_black_pix)
+    #print(total_num_of_pix * pix_threshold)
+    detected = False
+
+    if number_of_white_pix > pix_threshold*total_num_of_pix:
+        detected = True
+        print("detected")
+        rospy.Publisher("is_stop", _IsStop, queue_size = 1)
+    
+    return detected          
+
 ####################################################################################
 
 
@@ -517,9 +481,7 @@ def start():
 
         warp_img, _, _ = warp_image(image, warp_src, warp_dist, (warp_img_w, warp_img_h))
         warp_det_img, _, _ = warp_image(image, warp_det_src, warp_det_dist, (warp_img_w, warp_img_h))
-        #detect(warp_det_img)
-        #cv2.imshow("warp_det_img", warp_det_img)
-        #cv2.imshow("warp_img", warp_img)
+        detect(warp_det_img)
 
         global left_fit
         global right_fit
