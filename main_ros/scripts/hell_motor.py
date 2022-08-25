@@ -7,15 +7,13 @@
 # 본 프로그램은 상업 라이센스에 의해 제공되므로 무단 배포 및 상업적 이용을 금합니다.
 #############################################################################
 
-import rospy, rospkg
+import rospy
 import time
-import serial
-import threading
+import math
 import sys
 import os
 import signal
 from geometry_msgs.msg import Twist
-from xycar_msgs.msg import xycar_motor
 from ackermann_msgs.msg import AckermannDriveStamped
 from vesc_msgs.msg import VescStateStamped
 from hell_coding.msg import IsStop
@@ -99,6 +97,7 @@ class motor:
             self.ack_msg.header.frame_id = ''
             self.ackerm_publisher = rospy.Publisher('ackermann_cmd', AckermannDriveStamped, queue_size=1)
 
+        # rospy.Subscriber("cmd_vel", Twist, self.dwa_ackermann_callback, queue_size=1) # when using teb local planner
         rospy.Subscriber("cmd_vel", Twist, self.teb_ackermann_callback, queue_size=1) # when using teb local planner
 
         if goal_manager:
@@ -156,7 +155,7 @@ class motor:
 
     def teb_ackermann_callback(self, msg):
         speed = msg.linear.x
-        steering_angle = - msg.angular.z
+        steering_angle = -msg.angular.z
         stop_cnt = 0
         # self.stop = rospy.wait_for_message("is_stop", IsStop, timeout=3)
         # # wait_for_message -> subscribe
@@ -177,6 +176,34 @@ class motor:
         
         else:
             self.auto_drive(steering_angle, speed)
+    
+    def dwa_ackermann_callback(self, msg):
+        speed = msg.linear.x
+        steering_angle = self.convert_trans_rot_vel_to_steering_angle(speed, -msg.angular.z, 0.34)
+
+        if self.goal_manager is not None:
+            if self.goal_manager.stop_line and stop_cnt == 0:
+                speed = 0
+                self.auto_drive(steering_angle, speed)
+                rospy.sleep(3.)
+                stop_cnt += 1
+            
+            elif self.goal_manager.stop_line and stop_cnt != 0:
+                self.auto_drive(steering_angle, speed)
+                stop_cnt = 0
+
+            else:
+                self.auto_drive(steering_angle, speed)
+        
+        else:
+            self.auto_drive(steering_angle, speed)
+    
+    def convert_trans_rot_vel_to_steering_angle(self, v, omega, wheelbase):
+        if omega == 0 or v == 0:
+            return 0
+
+        radius = v / omega
+        return math.atan(wheelbase / radius)
 
 
 if __name__ == '__main__':

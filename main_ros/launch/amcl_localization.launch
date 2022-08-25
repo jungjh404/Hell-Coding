@@ -1,9 +1,9 @@
 <launch>
   <!-- Arguments -->
   <arg name="scan_topic"     default="scan"/>
-  <arg name="initial_pose_x" default="0.0"/>
-  <arg name="initial_pose_y" default="0.0"/>
-  <arg name="initial_pose_a" default="0.0"/>
+  <arg name="initial_pose_x" default="13.177"/>
+  <arg name="initial_pose_y" default="-0.301"/>
+  <arg name="initial_pose_a" default="0"/>
 
   <!-- robot pose ekf 
   <node pkg="robot_pose_ekf" type="robot_pose_ekf" name="robot_pose_ekf">
@@ -51,10 +51,10 @@
     <param name="laser_model_type"          value="likelihood_field"/>
 
     <param name="odom_model_type"           value="diff"/>  <!--original is diff-->
-    <param name="odom_alpha1"               value="0.5"/>   <!--very big default 0.1-->
-    <param name="odom_alpha2"               value="0.3"/>   <!--quite big default 0.1-->
-    <param name="odom_alpha3"               value="0.15"/>   <!--very small default 0.1-->
-    <param name="odom_alpha4"               value="0.4"/>   <!--quite big default 0.1-->
+    <param name="odom_alpha1"               value="0.6"/>   <!--very big default 0.5-->
+    <param name="odom_alpha2"               value="0.3"/>   <!--quite big default 0.3-->
+    <param name="odom_alpha3"               value="0.15"/>   <!--very small default 0.15-->
+    <param name="odom_alpha4"               value="0.4"/>   <!--quite big default 0.4-->
     <param name="odom_frame_id"             value="odom"/>   <!--original is map-->
     <param name="base_frame_id"             value="base_link"/>
     <param name="global_frame_id"           value="map"/>

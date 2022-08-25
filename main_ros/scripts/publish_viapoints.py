@@ -34,16 +34,16 @@ def publish_via_points_msg():
   r = rospy.Rate(1) # 10hz
   t = 0.0
 
-  pub.publish(via_points_msg)
-  r.sleep()
-  pub.publish(via_points_msg)
-  r.sleep()
+  # pub.publish(via_points_msg)
+  # r.sleep()
+  # pub.publish(via_points_msg)
+  # r.sleep()
 
-  # while not rospy.is_shutdown():
+  while not rospy.is_shutdown():
         
-  #   pub.publish(via_points_msg)
+    pub.publish(via_points_msg)
     
-  #   r.sleep()
+    r.sleep()
 
 
 
