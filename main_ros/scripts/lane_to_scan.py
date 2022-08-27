@@ -98,8 +98,8 @@ class Publishint():
         smp4 = s4[::cnt(s4)]
         
         smp_fin = smp1 + smp2 + smp3 + smp4
-        print(len(smp1))
-        print(len(smp_fin))
+        # print(len(smp1))
+        # print(len(smp_fin))
         rmp1 = p1[::cnt(p1)]
         rmp2 = p2[::cnt(p2)]
         rmp3 = p3[::cnt(p3)]
@@ -117,8 +117,8 @@ class Publishint():
             # range is in [m]
         scan.header.stamp = current_time
         scan.header.frame_id = 'base_scan'
-        scan.angle_min = -math.pi/2
-        scan.angle_max = math.pi/2
+        scan.angle_min = 0
+        scan.angle_max = math.pi
         scan.angle_increment = math.pi / num_readings
         scan.time_increment = (1.0 / laser_frequency) / (num_readings)
         scan.range_min = 0.0
@@ -142,7 +142,7 @@ class Publishint():
                 try:
                     idx = int(smp_fin[j][0] / math.pi * num_readings)
                     scan.ranges[idx] = smp_fin[j][1]
-                    print(smp_fin[j][1])
+                    # print(smp_fin[j][1])
                     scan.intensities[idx] = 1
                     j+=1
                 except IndexError:
@@ -154,7 +154,7 @@ class Publishint():
                 try:
                     idx = int(rmp_fin[k][0] / math.pi * num_readings)
                     scan.ranges[idx] = rmp_fin[k][1]
-                    print(rmp_fin[k][1])
+                    # print(rmp_fin[k][1])
                     scan.intensities[idx] = 1
                     k+=1
                 except IndexError:
@@ -351,32 +351,6 @@ def y_pix(a):
 ####################################################################################
 ################################testing#############################################
 
-pix_threshold = 0.07
-
-def detect(img):
-    
-    #return True if stopline is detected else False
-    
-    bev = img
-    blur = cv2.GaussianBlur(bev, (5, 5), 0)
-    _, L, _ = cv2.split(cv2.cvtColor(blur, cv2.COLOR_BGR2HLS))
-    lane = cv2.adaptiveThreshold(L, 255, cv2.ADAPTIVE_THRESH_MEAN_C, cv2.THRESH_BINARY_INV, 21, 10)
-    number_of_white_pix = np.sum(lane == 255)
-    number_of_black_pix = np.sum(lane == 0)
-    total_num_of_pix = number_of_white_pix + number_of_black_pix
-    
-    #print('Number of white pixels:', number_of_white_pix)
-    #print('Number of black pixels:', number_of_black_pix)
-    #print(total_num_of_pix * pix_threshold)
-    detected = False
-
-    if number_of_white_pix > pix_threshold*total_num_of_pix:
-        detected = True
-        print("detected")
-        rospy.Publisher("is_stop", _IsStop, queue_size = 1)
-    
-    return detected          
-
 ####################################################################################
 
 
@@ -432,24 +406,26 @@ def start():
         lane_bin_th = 180#180
 
         warp_src  = np.array([
-            [Width*1/5 - 30, Height*3/4],
-            [0+5,Height-70],
-            [Width*4/5, Height*3/4],
-            [Width-5,Height-70]
+            [Width*1/5 + 30, Height*1/2 + 40],
+            [0,Height-82],
+            [Width*4/5 - 15, Height*1/2 + 40],
+            [Width,Height-82]
         ], dtype=np.float32)
 
         #blue : left
-        #image = cv2.circle(image, (Width*1/5, Height*3/4), 10, (255,0,0), 3)
-        #image = cv2.circle(image, (0,Height-70), 10, (255,0,0), 3)
+        image = cv2.circle(image, (Width*1/5+30, Height*1/2+40), 10, (255,0,0), 3)
+        image = cv2.circle(image, (0,Height-10), 10, (255,0,0), 3)
         #yellow : right
-        #image = cv2.circle(image, (Width*4/5, Height*3/4), 10, (0,255,255), 3)
-        #image = cv2.circle(image, (Width,Height-70), 10, (0,255,255), 3)
+        image = cv2.circle(image, (Width*4/5 - 15, Height*1/2 + 40), 10, (0,255,255), 3)
+        image = cv2.circle(image, (Width,Height-30), 10, (0,255,255), 3)
+        
+        #marker
         
         warp_dist = np.array([
-            [0+30,0],
-            [0+5, Height-70], #0
-            [Width-5,0],
-            [Width, Height-70]
+            [-40,0],
+            [40, Height], #0
+            [Width+40,0],
+            [Width-40, Height]
         ], dtype=np.float32)
 
         #left low
@@ -464,24 +440,26 @@ def start():
         cv2.imshow("original", image)
         #warp convertion array for def detect(stopline detection function)
         warp_det_src = np.array([
-            [Width/6,Height-120],
-            [0,Height-60],
-            [Width,Height-60],
-            [Width*5/6,Height-120]
+            [Width*1/5 + 30, Height*1/2+40],
+            [0,Height-10],
+            [Width*4/5 - 15, Height*1/2+40],
+            [Width,Height-30]
         ], dtype = np.float32)
 
 
         warp_det_dist = np.array([
-            [0,Height-180],
-            [0,Height-60],
-            [Width,Height-60],
-            [Width,Height-180]
+            [-40,0],
+            [40, Height], #0
+            [Width+40,0],
+            [Width-40, Height]
         ], dtype = np.float32)
 
 
         warp_img, _, _ = warp_image(image, warp_src, warp_dist, (warp_img_w, warp_img_h))
         warp_det_img, _, _ = warp_image(image, warp_det_src, warp_det_dist, (warp_img_w, warp_img_h))
-        detect(warp_det_img)
+        
+        #cv2.imshow("warp_det_img", warp_det_img)
+        #cv2.imshow("warp_img", warp_img)
 
         global left_fit
         global right_fit
@@ -491,6 +469,13 @@ def start():
         pub.initfunc(lxp,rxp,lyp,ryp)
         
         cv2.imshow("out_img",out_img)
+        cv2.circle(warp_img, (Width/2, Height*1/2+40), 3, (255,0,0), 3)
+        
+        #y:15cm
+        #280
+        cv2.circle(warp_img, (Width/4 - 30, Height), 3, (255,0,0), 3)
+        #x:24.5cm
+        #130
         cv2.imshow("warp_img", warp_img)
         cv2.waitKey(1)
 
