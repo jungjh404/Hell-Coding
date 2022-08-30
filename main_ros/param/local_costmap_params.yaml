@@ -2,11 +2,11 @@ local_costmap:
   global_frame: odom
   robot_base_frame: base_link
 
-  update_frequency: 10.0
-  publish_frequency: 10.0
+  update_frequency: 5.0
+  publish_frequency: 5.0
   transform_tolerance: 0.5  
 
-  static_map: false  
+  static_map: true  
   rolling_window: true
   width: 3
   height: 3
@@ -14,9 +14,10 @@ local_costmap:
 
   plugins:
   - {name: obstacle_layer, type: "costmap_2d::VoxelLayer"}
-  - {name: sonar_layer,   type: "range_sensor_layer::RangeSensorLayer"}
-  - {name: inflation_layer, type: "costmap_2d::InflationLayer"}
   - {name: lane_layer, type: "costmap_2d::VoxelLayer"}
+  - {name: inflation_layer, type: "costmap_2d::InflationLayer"}
+  - {name: sonar_layer,   type: "range_sensor_layer::RangeSensorLayer"}
+  
   
   #Configuration for the sensors that the costmap will use to update a map
   obstacle_layer:   
@@ -29,5 +30,5 @@ local_costmap:
   
   lane_layer:
     observation_sources: lane_scan
-    scan: {sensor_frame: base_scan, data_type: LaserScan, topic: lane_scan, marking: true, clearing: true}
+    lane_scan: {sensor_frame: lane_scan, data_type: LaserScan, topic: lane_scan, marking: true, clearing: true}
 

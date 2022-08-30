@@ -11,9 +11,11 @@ from math import *
 from sensor_msgs.msg import LaserScan
 
 
-
 # from hell_coding.msg import _IsStop
 class Publishint():
+    global prev_lyp_mid
+    global prev_ryp_mid
+
     def initfunc(self, llx , rlx, lly, rly, lx_pix, rx_pix, ly_pix, ry_pix):
         #rospy.init_node('laser_scan_publisher')
 
@@ -116,9 +118,9 @@ class Publishint():
 
             # range is in [m]
         scan.header.stamp = current_time
-        scan.header.frame_id = 'base_scan'
-        scan.angle_min = 0
-        scan.angle_max = math.pi
+        scan.header.frame_id = 'lane_scan'
+        scan.angle_min = -math.pi/2
+        scan.angle_max = math.pi/2
         scan.angle_increment = math.pi / num_readings
         scan.time_increment = (1.0 / laser_frequency) / (num_readings)
         scan.range_min = 0.0
@@ -147,11 +149,16 @@ class Publishint():
         lyp_mid = np.median(ly_pix)
         ryp_mid = np.median(ry_pix)
 
-        if np.isnan(lyp_mid):
-            lyp_mid = prev_lyp_mid
-        if np.isnan(ryp_mid):
-            ryp_mid = prev_ryp_mid
-        
+        try:
+            if np.isnan(lyp_mid):
+                lyp_mid = prev_lyp_mid
+        except NameError:
+            pass
+        try:
+            if np.isnan(ryp_mid):
+                ryp_mid = prev_ryp_mid
+        except NameError:
+            pass
         flag = 0
         if (rp_mid - lp_mid > 450) and (200 < lyp_mid < 280):
             for i in range(0, num_readings):
@@ -292,7 +299,7 @@ def warp_process_image(img):
     cv2.rectangle(lane, (0,Height-80), (20,Height), (0,0,0), -1)
     cv2.rectangle(lane, (Width-20,Height-100), (Width+40,Height), (0,0,0), -1)
 
-    cv2.imshow("lane", lane)
+    # cv2.imshow("lane", lane)
 
     histogram = np.sum(lane[lane.shape[0]//2:,:],   axis=0)      
     midpoint = np.int(histogram.shape[0]/2)
@@ -406,9 +413,9 @@ def warp_process_image(img):
     return lfit, rfit, llx_pix, rlx_pix, lly_pix, rly_pix
 
 def x_pix(a):
-    return (a - 320)*0.00145
+    return (a - 320)*0.00129
 def y_pix(a):
-    return (480 - a + 107)*0.00145
+    return (480 - a + 413)*0.00075
 
 
 ####################################################################################
@@ -475,7 +482,6 @@ def start():
             [Width,Height-82]
         ], dtype=np.float32)
 
-        
         warp_dist = np.array([
             [-40,0],
             [40, Height], #0
@@ -499,7 +505,7 @@ def start():
             [Width-40, Height]
         ], dtype=np.float32)
         '''
-        cv2.imshow("original", image)
+        # cv2.imshow("original", image)
 
         warp_img, _, _ = warp_image(image, warp_src, warp_dist, (warp_img_w, warp_img_h))
 
@@ -510,7 +516,7 @@ def start():
         
         pub.initfunc(lxp,rxp,lyp,ryp, lx, rx, lly, rly)
         
-        cv2.imshow("out_img",out_img)
+        # cv2.imshow("out_img",out_img)
         #cv2.circle(warp_img, (Width/2, Height*1/2+40), 3, (255,0,0), 3)
         
         #y:15cm
@@ -519,14 +525,9 @@ def start():
         #x:24.5cm
         #130
         #cv2.imshow("warp_img", warp_img)
-        cv2.waitKey(1)
+        # cv2.waitKey(1)
 
 
-#=============================================
-# ???? ???
-# ???? ???? ????? ????? ???? start() ????? ?????.
-# start() ????? ???????? ???? ?????. 
-#=============================================
 if __name__ == '__main__':
     try:
         start()
