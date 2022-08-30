@@ -343,76 +343,14 @@ def warp_process_image(img):
     return lfit, rfit, llx_pix, rlx_pix, lly_pix, rly_pix
 
 def x_pix(a):
-    return (a - 320)*0.00145
+    return (a - 320)*0.00129 #0.00145
 def y_pix(a):
-    return (480 - a + 107)*0.00145
+    return (480 - a - 100)*0.00075 #413, 0.00145
 
 
 ####################################################################################
 ################################testing#############################################
 
-red, green, blue, yellow = (0, 0, 255), (0, 255, 0), (255, 0, 0), (0, 255, 255)
-
-
-stopline_threshold = 200 #125
-area_threshold = 2000
-length_threshold = 2000#300
-'''  
-def detect(img):
-    
-    #return True if stopline is detected else False
-    
-    bev = img
-    blur = cv2.GaussianBlur(bev, (5, 5), 0)
-    _, L, _ = cv2.split(cv2.cvtColor(blur, cv2.COLOR_BGR2HLS))
-    #_, lane = cv2.threshold(L, stopline_threshold, 255, cv2.THRESH_BINARY)
-    lane = cv2.adaptiveThreshold(L, 255, cv2.ADAPTIVE_THRESH_MEAN_C, cv2.THRESH_BINARY_INV, 21, 10)
-    _, contours, _ = cv2.findContours(lane, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
-    bev_copy = bev.copy()
-    #?��?��?�� ?���??�� 그려주기
-    bev_copy = cv2.rectangle(bev_copy, (0,0), (Width, Height*3/4), (0,0,0), -1)
-    cv2.waitKey(1)
-    cv2.drawContours(image=bev_copy, contours=contours, contourIdx=-1, color=(0, 255, 0), thickness=2, lineType=cv2.LINE_AA)
-    #bev_copy = cv2.rectangle(bev_copy, (0,0), (Width, Height*3/4), (0,0,0), -1)
-    detected = False
-    for cont in contours:
-        
-        length = cv2.arcLength(cont, True)
-        area = cv2.contourArea(cont)
-        
-        #if not ((area > area_threshold) and (length > length_threshold)):
-        #    continue
-        #
-        #if len(cv2.approxPolyDP(cont, length*0.02, True)) != 4:
-        #    continue
-        
-        #629, 406]], dtype=int32), array([[613, 371]], dtype=int32), array([[610, 406]], dtype=int32), array([[ 60, 425]], dtype=int32))
-        
-        x, y, w, h = cv2.boundingRect(cont)
-        center = (x + int(w/2), y + int(h/2))
-        _, width, _ = bev_copy.shape
-        
-        
-        if (w<50):
-            continue
-        print(w,h)
-        cv2.rectangle(bev_copy, (x, y), (x + w, y + h), blue, 2)
-        if (w > 200) and (h > 200):
-            cv2.rectangle(bev_copy, (x, y), (x + w, y + h), red, 2)
-            p1, p2, p3, p4 = cv2.approxPolyDP(cont, length*0.02, True)
-            print(p1,p2,p3,p4)
-            
-            detected = True
-            rospy.Publisher("is_stop", _IsStop, queue_size = 1)
-        
-    if not detected:
-        print("Lane is not detected")
-    else:
-        print("Lane is detected")
-    #cv2.imshow('stopline', bev_copy)
-    
-    return detected        
-'''
 ####################################################################################
 
 
@@ -468,24 +406,26 @@ def start():
         lane_bin_th = 180#180
 
         warp_src  = np.array([
-            [Width*1/5 - 30, Height*3/4],
-            [0+5,Height-70],
-            [Width*4/5, Height*3/4],
-            [Width-5,Height-70]
+            [Width*1/5 + 30, Height*1/2 + 40],
+            [0,Height-82],
+            [Width*4/5 - 15, Height*1/2 + 40],
+            [Width,Height-82]
         ], dtype=np.float32)
 
         #blue : left
-        #image = cv2.circle(image, (Width*1/5, Height*3/4), 10, (255,0,0), 3)
-        #image = cv2.circle(image, (0,Height-70), 10, (255,0,0), 3)
+        #image = cv2.circle(image, (Width*1/5+30, Height*1/2+40), 10, (255,0,0), 3)
+        #image = cv2.circle(image, (0,Height-10), 10, (255,0,0), 3)
         #yellow : right
-        #image = cv2.circle(image, (Width*4/5, Height*3/4), 10, (0,255,255), 3)
-        #image = cv2.circle(image, (Width,Height-70), 10, (0,255,255), 3)
+        #image = cv2.circle(image, (Width*4/5 - 15, Height*1/2 + 40), 10, (0,255,255), 3)
+        #image = cv2.circle(image, (Width,Height-30), 10, (0,255,255), 3)
+        
+        #marker
         
         warp_dist = np.array([
-            [0+30,0],
-            [0+5, Height-70], #0
-            [Width-5,0],
-            [Width, Height-70]
+            [-40,0],
+            [40, Height], #0
+            [Width+40,0],
+            [Width-40, Height]
         ], dtype=np.float32)
 
         #left low
@@ -500,24 +440,24 @@ def start():
         cv2.imshow("original", image)
         #warp convertion array for def detect(stopline detection function)
         warp_det_src = np.array([
-            [Width/6,Height-120],
-            [0,Height-60],
-            [Width,Height-60],
-            [Width*5/6,Height-120]
+            [Width*1/5 + 30, Height*1/2+40],
+            [0,Height-10],
+            [Width*4/5 - 15, Height*1/2+40],
+            [Width,Height-30]
         ], dtype = np.float32)
 
 
         warp_det_dist = np.array([
-            [0,Height-180],
-            [0,Height-60],
-            [Width,Height-60],
-            [Width,Height-180]
+            [-40,0],
+            [40, Height], #0
+            [Width+40,0],
+            [Width-40, Height]
         ], dtype = np.float32)
 
 
         warp_img, _, _ = warp_image(image, warp_src, warp_dist, (warp_img_w, warp_img_h))
         warp_det_img, _, _ = warp_image(image, warp_det_src, warp_det_dist, (warp_img_w, warp_img_h))
-        #detect(warp_det_img)
+        
         #cv2.imshow("warp_det_img", warp_det_img)
         #cv2.imshow("warp_img", warp_img)
 
@@ -529,6 +469,13 @@ def start():
         pub.initfunc(lxp,rxp,lyp,ryp)
         
         cv2.imshow("out_img",out_img)
+        #cv2.circle(warp_img, (Width/2, Height*1/2+40), 3, (255,0,0), 3)
+        
+        #y:15cm
+        #280
+        #cv2.circle(warp_img, (Width/4 - 30, Height), 3, (255,0,0), 3)
+        #x:24.5cm
+        #130
         cv2.imshow("warp_img", warp_img)
         cv2.waitKey(1)
 
