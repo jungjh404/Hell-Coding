@@ -11,10 +11,12 @@ from math import *
 from sensor_msgs.msg import LaserScan
 
 
-
 # from hell_coding.msg import _IsStop
 class Publishint():
-    def initfunc(self, llx , rlx, lly, rly):
+    global prev_lyp_mid
+    global prev_ryp_mid
+
+    def initfunc(self, llx , rlx, lly, rly, lx_pix, rx_pix, ly_pix, ry_pix):
         #rospy.init_node('laser_scan_publisher')
 
         scan_pub = rospy.Publisher('lane_scan', LaserScan, queue_size=50)
@@ -116,9 +118,9 @@ class Publishint():
 
             # range is in [m]
         scan.header.stamp = current_time
-        scan.header.frame_id = 'base_scan'
-        scan.angle_min = 0
-        scan.angle_max = math.pi
+        scan.header.frame_id = 'lane_scan'
+        scan.angle_min = -math.pi/2
+        scan.angle_max = math.pi/2
         scan.angle_increment = math.pi / num_readings
         scan.time_increment = (1.0 / laser_frequency) / (num_readings)
         scan.range_min = 0.0
@@ -132,35 +134,103 @@ class Publishint():
 
         j = 0
         k = 0
+        #print("num_x: ", len(lx_pix), len(rx_pix))
+        #print('x: ',np.median(lx_pix), np.median(rx_pix))
+        #print('y: ',np.median(ly_pix), np.median(ry_pix))
         
-        for i in range(0, num_readings):
-                #if (j == len(x)):
-                #    break
+        #print('left start finish', lx_pix[0], lx_pix[-1], lx_pix[0]-lx_pix[-1])
+        #print('right start finish', rx_pix[0], rx_pix[-1], rx_pix[0]-rx_pix[-1])
+        if rx_pix[0]-rx_pix[-1] > 25:
+            print("left turn")
+        if lx_pix[0]-lx_pix[-1] < -30:
+            print("right turn")
+        lp_mid = np.median(lx_pix)
+        rp_mid = np.median(rx_pix)
+        lyp_mid = np.median(ly_pix)
+        ryp_mid = np.median(ry_pix)
 
-                #if theta is within the increments
-            if (j < len(smp_fin) and abs(i * scan.angle_increment -smp_fin[j][0]) < error ):
-                try:
-                    idx = int(smp_fin[j][0] / math.pi * num_readings)
-                    scan.ranges[idx] = smp_fin[j][1]
-                    # print(smp_fin[j][1])
-                    scan.intensities[idx] = 1
-                    j+=1
-                except IndexError:
-                    pass
-                #if use pass, there is time delay, resulting in error
+        try:
+            if np.isnan(lyp_mid):
+                lyp_mid = prev_lyp_mid
+        except NameError:
+            pass
+        try:
+            if np.isnan(ryp_mid):
+                ryp_mid = prev_ryp_mid
+        except NameError:
+            pass
+        flag = 0
+        if (rp_mid - lp_mid > 450) and (200 < lyp_mid < 280):
+            for i in range(0, num_readings):
+                    #if (j == len(x)):
+                    #    break
+
+                    #if theta is within the increments
+                if (j < len(smp_fin) and abs(i * scan.angle_increment -smp_fin[j][0]) < error ):
+                    try:
+                        idx = int(smp_fin[j][0] / math.pi * num_readings)
+                        scan.ranges[idx] = smp_fin[j][1]
+                        # print(smp_fin[j][1])
+                        scan.intensities[idx] = 1
+                        j+=1
+                    except IndexError:
+                        pass
+                    #if use pass, there is time delay, resulting in error
+        else:
+            print("left is false", lp_mid, rp_mid, lyp_mid, ryp_mid)
+            flag = 1
         
-        for i in range(0, num_readings):
-            if (k < len(rmp_fin) and abs(i * scan.angle_increment - rmp_fin[k][0]< error )):
-                try:
-                    idx = int(rmp_fin[k][0] / math.pi * num_readings)
-                    scan.ranges[idx] = rmp_fin[k][1]
-                    # print(rmp_fin[k][1])
-                    scan.intensities[idx] = 1
-                    k+=1
-                except IndexError:
-                    pass    
+        if (rp_mid - lp_mid > 450) and (200 < ryp_mid < 280):
+            flag = 0    
+            for i in range(0, num_readings):
+                if (k < len(rmp_fin) and abs(i * scan.angle_increment - rmp_fin[k][0]< error )):
+                    try:
+                        idx = int(rmp_fin[k][0] / math.pi * num_readings)
+                        scan.ranges[idx] = rmp_fin[k][1]
+                        # print(rmp_fin[k][1])
+                        scan.intensities[idx] = 1
+                        k+=1
+                    except IndexError:
+                        pass
+        else:
+            print("right is false", lp_mid, rp_mid, lyp_mid, ryp_mid)
         
+        # there are no lanes (flag = 1)
+        # non abs distance
+        # right lane is closer to middle
+        # publish left lane
+        if  (flag == 1) and (lx_pix[0]-lx_pix[-1] < -30 or (abs(ryp_mid -240)> 30)):#and (math.isnan(ryp_mid) is False)): #(320-lp_mid > rp_mid-320)
+            for i in range(0, num_readings):
+                if (j < len(smp_fin) and abs(i * scan.angle_increment -smp_fin[j][0]) < error ):
+                    try:
+                        idx = int(smp_fin[j][0] / math.pi * num_readings)
+                        scan.ranges[idx] = smp_fin[j][1]
+                        # print(smp_fin[j][1])
+                        scan.intensities[idx] = 1
+                        j+=1
+                    except IndexError:
+                        pass
+        # publish right lane
+        elif (flag == 1): #and (lyp_mid > 300): #(320-lp_mid < rp_mid-320)
+            for i in range(0, num_readings):
+                if (k < len(rmp_fin) and abs(i * scan.angle_increment - rmp_fin[k][0]< error )):
+                    try:
+                        idx = int(rmp_fin[k][0] / math.pi * num_readings)
+                        scan.ranges[idx] = rmp_fin[k][1]
+                        # print(rmp_fin[k][1])
+                        scan.intensities[idx] = 1
+                        k+=1
+                    except IndexError:
+                        pass
+        #elif flag == 1:
+        #    print("no lane")
+        else:
+            pass
         scan_pub.publish(scan)
+        global prev_lyp_mid
+        global prev_ryp_mid
+        prev_lyp_mid = lyp_mid
+        prev_ryp_mid = ryp_mid
 
 def cnt(arr):
     r = 0
@@ -229,7 +299,7 @@ def warp_process_image(img):
     cv2.rectangle(lane, (0,Height-80), (20,Height), (0,0,0), -1)
     cv2.rectangle(lane, (Width-20,Height-100), (Width+40,Height), (0,0,0), -1)
 
-    cv2.imshow("lane", lane)
+    # cv2.imshow("lane", lane)
 
     histogram = np.sum(lane[lane.shape[0]//2:,:],   axis=0)      
     midpoint = np.int(histogram.shape[0]/2)
@@ -306,7 +376,7 @@ def warp_process_image(img):
     out_img[nz[0][right_lane_inds] , nz[1][right_lane_inds]]= [0, 0, 255]    
 
    
-
+    global llx, lly, rlx, rly
     llx = []
     llx = nz[1][left_lane_inds]
     lly = []
@@ -343,9 +413,9 @@ def warp_process_image(img):
     return lfit, rfit, llx_pix, rlx_pix, lly_pix, rly_pix
 
 def x_pix(a):
-    return (a - 320)*0.00129 #0.00145
+    return (a - 320)*0.00129
 def y_pix(a):
-    return (480 - a - 100)*0.00075 #413, 0.00145
+    return (480 - a + 413)*0.00075
 
 
 ####################################################################################
@@ -412,13 +482,20 @@ def start():
             [Width,Height-82]
         ], dtype=np.float32)
 
-        #blue : left
-        #image = cv2.circle(image, (Width*1/5+30, Height*1/2+40), 10, (255,0,0), 3)
-        #image = cv2.circle(image, (0,Height-10), 10, (255,0,0), 3)
-        #yellow : right
-        #image = cv2.circle(image, (Width*4/5 - 15, Height*1/2 + 40), 10, (0,255,255), 3)
-        #image = cv2.circle(image, (Width,Height-30), 10, (0,255,255), 3)
-        
+        warp_dist = np.array([
+            [-40,0],
+            [40, Height], #0
+            [Width+40,0],
+            [Width-40, Height]
+        ], dtype=np.float32)
+        ''''
+        warp_src  = np.array([
+            [Width*1/5 + 30, Height*1/2 + 40],
+            [0,Height-82],
+            [Width*4/5 - 15, Height*1/2 + 40],
+            [Width,Height-82]
+        ], dtype=np.float32)
+
         #marker
         
         warp_dist = np.array([
@@ -427,48 +504,19 @@ def start():
             [Width+40,0],
             [Width-40, Height]
         ], dtype=np.float32)
-
-        #left low
-        #image = cv2.circle(image, (0,Height-60), 10, (0,0,255), 3)
-        #right low
-        #image = cv2.circle(image, (Width,Height-60), 10, (0,0,255), 3)
-        
-        #left high
-        #image = cv2.circle(image, (Width/6,Height-120), 10, (0,0,255), 3)
-        #right high
-        #image = cv2.circle(image, (Width*5/6,Height-120), 10, (0,0,255), 3)
-        cv2.imshow("original", image)
-        #warp convertion array for def detect(stopline detection function)
-        warp_det_src = np.array([
-            [Width*1/5 + 30, Height*1/2+40],
-            [0,Height-10],
-            [Width*4/5 - 15, Height*1/2+40],
-            [Width,Height-30]
-        ], dtype = np.float32)
-
-
-        warp_det_dist = np.array([
-            [-40,0],
-            [40, Height], #0
-            [Width+40,0],
-            [Width-40, Height]
-        ], dtype = np.float32)
-
+        '''
+        # cv2.imshow("original", image)
 
         warp_img, _, _ = warp_image(image, warp_src, warp_dist, (warp_img_w, warp_img_h))
-        warp_det_img, _, _ = warp_image(image, warp_det_src, warp_det_dist, (warp_img_w, warp_img_h))
-        
-        #cv2.imshow("warp_det_img", warp_det_img)
-        #cv2.imshow("warp_img", warp_img)
 
         global left_fit
         global right_fit
 
         left_fit, right_fit,lxp,rxp,lyp,ryp = warp_process_image(warp_img)
         
-        pub.initfunc(lxp,rxp,lyp,ryp)
+        pub.initfunc(lxp,rxp,lyp,ryp, lx, rx, lly, rly)
         
-        cv2.imshow("out_img",out_img)
+        # cv2.imshow("out_img",out_img)
         #cv2.circle(warp_img, (Width/2, Height*1/2+40), 3, (255,0,0), 3)
         
         #y:15cm
@@ -476,18 +524,10 @@ def start():
         #cv2.circle(warp_img, (Width/4 - 30, Height), 3, (255,0,0), 3)
         #x:24.5cm
         #130
-        cv2.imshow("warp_img", warp_img)
-        cv2.waitKey(1)
-
-        # r = rospy.Rate(10)
-        # r.sleep()
+        #cv2.imshow("warp_img", warp_img)
+        # cv2.waitKey(1)
 
 
-#=============================================
-# ???? ???
-# ???? ???? ????? ????? ???? start() ????? ?????.
-# start() ????? ???????? ???? ?????. 
-#=============================================
 if __name__ == '__main__':
     try:
         start()

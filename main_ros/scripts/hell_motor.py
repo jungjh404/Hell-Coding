@@ -16,7 +16,6 @@ import signal
 from geometry_msgs.msg import Twist
 from ackermann_msgs.msg import AckermannDriveStamped
 from vesc_msgs.msg import VescStateStamped
-from hell_coding.msg import IsStop
 from goal_manager import GoalManager
 
 
@@ -30,16 +29,17 @@ def signal_handler(sig, frame):
 signal.signal(signal.SIGINT, signal_handler)
 
 class motor:
-    def __init__(self, goal_manager):
+    def __init__(self, goal_manager, idx):
         deviceSetFunc = [self.set_vesc]
         self.control = False
         self.debug = False
         self.start_time = time.time()
-        self.goal_manager = None
+        self.gm = None
         self.motor_type = 0
+        self.stop_cnt = 0
         deviceSetFunc[self.motor_type]()
         self.set_parameter()
-        self.ros_init(goal_manager=="true")        
+        self.ros_init(goal_manager=="true", idx)        
         rospy.spin()
 
     def set_parameter(self):
@@ -89,7 +89,7 @@ class motor:
                 print(self.Battery)
             self.start_time = time.time()
 
-    def ros_init(self, goal_manager):
+    def ros_init(self, goal_manager, idx):
         rospy.init_node('xycar_motor')
 
         if self.motor_type == 0:
@@ -101,7 +101,7 @@ class motor:
         rospy.Subscriber("cmd_vel", Twist, self.teb_ackermann_callback, queue_size=1) # when using teb local planner
 
         if goal_manager:
-            self.goal_manager = GoalManager()
+            self.gm = GoalManager(idx)
 
         self.angle_offset = rospy.get_param("~angle_offset")
         self.motor_type = rospy.get_param("~motor_type")
@@ -156,20 +156,13 @@ class motor:
     def teb_ackermann_callback(self, msg):
         speed = msg.linear.x
         steering_angle = -msg.angular.z
-        stop_cnt = 0
-        # self.stop = rospy.wait_for_message("is_stop", IsStop, timeout=3)
-        # # wait_for_message -> subscribe
                 
-        if self.goal_manager is not None:
-            if self.goal_manager.stop_line and stop_cnt == 0:
+        if self.gm is not None:
+            if self.gm.stop_node.detected and self.stop_cnt == 0 and self.gm.goal_list[self.gm.goal_cnt].stop:
                 speed = 0
                 self.auto_drive(steering_angle, speed)
                 rospy.sleep(3.)
-                stop_cnt += 1
-            
-            elif self.goal_manager.stop_line and stop_cnt != 0:
-                self.auto_drive(steering_angle, speed)
-                stop_cnt = 0
+                self.stop_cnt += 1
 
             else:
                 self.auto_drive(steering_angle, speed)
@@ -182,15 +175,15 @@ class motor:
         steering_angle = self.convert_trans_rot_vel_to_steering_angle(speed, -msg.angular.z, 0.34)
 
         if self.goal_manager is not None:
-            if self.goal_manager.stop_line and stop_cnt == 0:
+            if self.goal_manager.stop_line and self.stop_cnt == 0:
                 speed = 0
                 self.auto_drive(steering_angle, speed)
                 rospy.sleep(3.)
-                stop_cnt += 1
+                self.stop_cnt += 1
             
-            elif self.goal_manager.stop_line and stop_cnt != 0:
+            elif self.goal_manager.stop_line and self.stop_cnt != 0:
                 self.auto_drive(steering_angle, speed)
-                stop_cnt = 0
+                self.stop_cnt = 0
 
             else:
                 self.auto_drive(steering_angle, speed)
@@ -207,4 +200,4 @@ class motor:
 
 
 if __name__ == '__main__':
-    m = motor(sys.argv[1])
+    m = motor(sys.argv[1], int(sys.argv[2]))

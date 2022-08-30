@@ -1,13 +1,14 @@
 #!/usr/bin/env python
 
 
-from telnetlib import DO
 import rospy
 import math
 import actionlib
 import tf
 import threading
+import sys
 from goal import Goal
+from stopline import Stopline
 from ar_marker_pose import ar_marker_pose
 
 from ar_track_alvar_msgs.msg import AlvarMarkers
@@ -21,8 +22,8 @@ from dynamic_reconfigure.srv import Reconfigure
 
 
 class GoalManager:
-    def __init__(self):
-        self.goal_cnt = 0
+    def __init__(self, idx):
+        self.goal_cnt = idx
         ## for mission driving
         # self.goal_list = [
         #                 Goal(x=0.612760,    y=0.299775,     yaw=math.degrees(-0.1275164)),        # start point
@@ -75,8 +76,8 @@ class GoalManager:
 
         ## for dong-bang
         self.goal_list=[
-            Goal(x=11.0, y=0, yaw=180, via_points=[[10.2, 0.1], [10.4, 0.1]]),
-            Goal(x=7.0, y=0.4, yaw=90, via_points=[[9, 0], [8, 0]])
+            Goal(x=13.0, y=0, yaw=180, via_points=[[11, 0.2], [12, -0.2]]),
+            Goal(x=7.0, y=0.4, yaw=90, via_points=[[10, 0], [8.5, 0.2]])
         ]
         # [12.5, 0], [12, 0.3], [11.5, 0], [11, -0.3]
         self.goal_num = len(self.goal_list)
@@ -84,15 +85,13 @@ class GoalManager:
         self.rate = rospy.Rate(10)
         self.proximity_radius = 1.0 ##
         self.via_point_update_flag = False
-        self.viapoint_cnt = 0
         
-
+        self.stop_node = Stopline()
         # self.cancel_pub = rospy.Publisher("/move_base/cancel", GoalID, queue_size=1)
         self.goal_pub = rospy.Publisher("/move_base/goal", MoveBaseActionGoal, queue_size=1)
         self.feedback_sub = rospy.Subscriber("/move_base/feedback", MoveBaseActionFeedback, self.proximity_cb)
         self.via_pub = rospy.Publisher('/move_base/TebLocalPlannerROS/via_points', Path, queue_size=1)
-        self.ar_sub = rospy.Subscriber("/ar_pose_marker", AlvarMarkers, self.ar_cb)
-        self.stop_line = False
+        # self.ar_sub = rospy.Subscriber("/ar_pose_marker", AlvarMarkers, self.ar_cb)
         self.tf_listener = tf.TransformListener()
         self.via_point_thread = None
 
@@ -159,6 +158,7 @@ class GoalManager:
         # self.viapoint_update_pub(target.via_points) ##
         
         rospy.loginfo("#%d: %f %f %f", self.goal_cnt, target.x+target.x_diff, target.y+target.y_diff, target.yaw)
+
         return goal
 
     def inflation_rad_call(self):
@@ -187,7 +187,7 @@ class GoalManager:
 
             if self.goal_cnt >= self.goal_num:
                 rospy.loginfo("Mission Finished.")
-                exit(0)
+                sys.exit(0)
             
             else:
                 self.goal_pub.publish(self.goal_msg_generate())
@@ -202,6 +202,9 @@ class GoalManager:
 
     def ar_cb(self, msg):
         for marker in msg.markers:
+            if marker.id not in self.marker_to_goal_dict.keys():
+                continue
+
             target = self.marker_to_goal_dict[marker.id]
             trans = ar_marker_pose(self.tf_listener, marker.id)
                 
@@ -216,12 +219,13 @@ class GoalManager:
 
         if proximity_dist < self.proximity_radius:
             self.via_point_update_flag = True
+
         rospy.loginfo(self.via_point_update_flag)
 
 
 if __name__ == "__main__":
     try:
         rospy.init_node("goal_manager", anonymous=True)
-        a = GoalManager()
+        a = GoalManager(0)
     except KeyboardInterrupt:
         exit(0)

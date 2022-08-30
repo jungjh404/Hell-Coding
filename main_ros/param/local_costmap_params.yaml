@@ -14,7 +14,7 @@ local_costmap:
 
   plugins:
   - {name: obstacle_layer, type: "costmap_2d::VoxelLayer"}
-  # - {name: lane_layer, type: "costmap_2d::VoxelLayer"}
+  - {name: lane_layer, type: "costmap_2d::VoxelLayer"}
   - {name: inflation_layer, type: "costmap_2d::InflationLayer"}
   - {name: sonar_layer,   type: "range_sensor_layer::RangeSensorLayer"}
   
@@ -30,5 +30,5 @@ local_costmap:
   
   lane_layer:
     observation_sources: lane_scan
-    lane_scan: {sensor_frame: base_scan, data_type: LaserScan, topic: lane_scan, marking: false, clearing: true}
+    lane_scan: {sensor_frame: lane_scan, data_type: LaserScan, topic: lane_scan, marking: true, clearing: true}
 

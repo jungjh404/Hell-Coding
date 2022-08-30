@@ -48,8 +48,8 @@ TebLocalPlannerROS:
   
 # Obstacles
   
-  min_obstacle_dist: 0.14
-  inflation_dist: 0.14 ##
+  min_obstacle_dist: 0.2
+  inflation_dist: 0 ##
   include_costmap_obstacles: True
   costmap_obstacles_behind_robot_dist: 0.5  # 0.3
   obstacle_poses_affected: 10
