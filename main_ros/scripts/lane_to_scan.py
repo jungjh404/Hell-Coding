@@ -47,10 +47,10 @@ class Publishint():
             #print(len(llx),len(llx)/50)
         #for i in range( 0, len(llx), int((len(llx)/50)) ):
         theta_l = np.arctan2(lly, llx)
-        theta_l = np.where(theta_l < 0, theta_l, theta_l + np.pi)
+        theta_l = np.where(theta_l > 0, theta_l, theta_l + np.pi)
         dist_l = np.sqrt(lly**2 + llx**2)
         theta_r = np.arctan2(rly, rlx)
-        theta_r = np.where(theta_r < 0, theta_r, theta_r + np.pi)
+        theta_r = np.where(theta_r > 0, theta_r, theta_r + np.pi)
         dist_r = np.sqrt(rlx**2 + rly**2)
         # for i in range( 0, len(llx) ):
         #     if (llx[i] > 0):
