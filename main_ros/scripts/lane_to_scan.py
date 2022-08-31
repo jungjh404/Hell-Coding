@@ -395,10 +395,10 @@ def warp_process_image(img):
     #print(len(nz[1][right_lane_inds]))
     #print(len(nz[0][right_lane_inds]))
     
-    llx_pix = [x_pix(i) for i in llx]
-    rlx_pix = [x_pix(i) for i in rlx]
-    lly_pix = [y_pix(i) for i in lly]
-    rly_pix = [y_pix(i) for i in rly]
+    llx_pix = x_pix(np.array(llx))
+    rlx_pix = x_pix(np.array(rlx))
+    lly_pix = y_pix(np.array(lly))
+    rly_pix = y_pix(np.array(rly))
 
     #print(llx_pix)
     #print('-----------------------')
