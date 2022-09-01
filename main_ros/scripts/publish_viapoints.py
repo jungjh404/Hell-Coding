@@ -14,19 +14,19 @@ def publish_via_points_msg():
 
   via_points_msg = Path() 
   via_points_msg.header.stamp = rospy.Time.now()
-  via_points_msg.header.frame_id = "odom" # CHANGE HERE: odom/map
+  via_points_msg.header.frame_id = "map" # CHANGE HERE: odom/map
   
   # Add via-points
   point1 = PoseStamped()
-  point1.pose.position.x = 2.0
+  point1.pose.position.x = 7.0
   point1.pose.position.y = 0.3
 
   point2 = PoseStamped()
-  point2.pose.position.x = 4.0
+  point2.pose.position.x = 6.0
   point2.pose.position.y = -0.3
 
   point3 = PoseStamped()
-  point3.pose.position.x = 6.0
+  point3.pose.position.x = 5.0
   point3.pose.position.y = 0.0
 
   via_points_msg.poses = [point1, point2, point3]

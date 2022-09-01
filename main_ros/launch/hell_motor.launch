@@ -2,13 +2,17 @@
   <arg name="motor_type" default="$(env motor_version)" />
   <arg name="angle_offset" default="0" />
   <arg name="goal_manager" default="false"/>
+  <arg name="idx" default="0"/>
 
   <group unless="$(arg motor_type)">
     <include file="$(find vesc_driver)/launch/vesc_drive_xycar_motor.launch" />
   </group>
 
-  <node name="hell_motor" pkg="hell_coding" type="hell_motor.py" output="screen" args="$(arg goal_manager)">
+  <node name="hell_motor" pkg="hell_coding" type="hell_motor.py" output="screen" args="$(arg goal_manager) $(arg idx)">
     <param name="motor_type" value="$(arg motor_type)" />
     <param name="angle_offset" value="$(arg angle_offset)" />
   </node>
+  
+  <!-- <node pkg="hell_coding" name="init_odom" type="init_odom.py"/> -->
+
 </launch>

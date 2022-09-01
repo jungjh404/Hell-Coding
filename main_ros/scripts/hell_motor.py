@@ -90,7 +90,7 @@ class motor:
             self.start_time = time.time()
 
     def ros_init(self, goal_manager, idx):
-        rospy.init_node('xycar_motor')
+        rospy.init_node('xycar_motor', anonymous=True)
 
         if self.motor_type == 0:
             self.ack_msg = AckermannDriveStamped()

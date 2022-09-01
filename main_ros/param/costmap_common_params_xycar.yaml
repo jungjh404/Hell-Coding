@@ -6,7 +6,7 @@ raytrace_range: 3.5
 footprint: [[-0.140, -0.140], [-0.140, 0.140], [0.450, 0.140], [0.450, -0.140]] # base_link at the center of rear axle
 
 
-inflation_radius: 0.2
+inflation_radius: 0.1
 # inscribed circle radius: 0.14 circumscribed circle radius: 0.4713
 cost_scaling_factor: 1
 # larger the cost scaling factor the steeper the decay

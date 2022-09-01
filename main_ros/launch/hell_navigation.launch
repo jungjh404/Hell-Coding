@@ -2,6 +2,7 @@
     <!-- Arguments -->
     <arg name="model" default="$(env TURTLEBOT3_MODEL)" doc="model type [burger, waffle, waffle_pi]"/>
     <arg name="map_file" default="$(find hell_coding)/map/map.yaml"/>
+    <!-- <arg name="map_file" default="$(find hell_coding)/map/kookmin_0830.yaml"/> -->
     <arg name="open_rviz" default="true"/>
     <arg name="move_forward_only" default="false"/>
     <arg name="goal_manager" default="false"/>
@@ -24,8 +25,9 @@
         <arg name="goal_manager" value="$(arg goal_manager)"/>
         <arg name="idx" value="$(arg idx)"/>
     </include>
+    <!-- <node pkg="hell_coding" name="lane_to_scan" type="lane_to_scan.py"/> -->
     <node pkg="hell_coding" name="init_odom" type="init_odom.py"/>
-    <node pkg="hell_coding" name="lane_to_scan" type="lane_to_scan.py"/>
+
     <!-- <node pkg="hell_coding" name="init_odom_ackr" type="init_odom_ackr.py"/> -->
 
 
@@ -37,6 +39,7 @@
 
     <!-- Map server -->
     <node pkg="map_server" name="map_server" type="map_server" args="$(arg map_file)"/>
+    <!-- <node pkg="map_server" name="lane_map_server" type="map_server" ns="lane" args="$(arg lane_map_file)"/> -->
 
     <!-- AMCL -->
     <!-- <include file="$(find turtlebot3_navigation)/launch/amcl.launch"/> -->
