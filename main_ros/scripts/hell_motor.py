@@ -158,7 +158,7 @@ class motor:
         steering_angle = -msg.angular.z
                 
         if self.gm is not None:
-            if self.gm.stop_node.detected and self.stop_cnt == 0 and self.gm.goal_list[self.gm.goal_cnt].stop:
+            if self.gm.stop_node.detected and self.stop_cnt == 0 and self.gm.goal_list[self.gm.goal_cnt].stop_flag:
                 speed = 0
                 self.auto_drive(steering_angle, speed)
                 rospy.sleep(3.)
@@ -169,34 +169,6 @@ class motor:
         
         else:
             self.auto_drive(steering_angle, speed)
-    
-    def dwa_ackermann_callback(self, msg):
-        speed = msg.linear.x
-        steering_angle = self.convert_trans_rot_vel_to_steering_angle(speed, -msg.angular.z, 0.34)
-
-        if self.goal_manager is not None:
-            if self.goal_manager.stop_line and self.stop_cnt == 0:
-                speed = 0
-                self.auto_drive(steering_angle, speed)
-                rospy.sleep(3.)
-                self.stop_cnt += 1
-            
-            elif self.goal_manager.stop_line and self.stop_cnt != 0:
-                self.auto_drive(steering_angle, speed)
-                self.stop_cnt = 0
-
-            else:
-                self.auto_drive(steering_angle, speed)
-        
-        else:
-            self.auto_drive(steering_angle, speed)
-    
-    def convert_trans_rot_vel_to_steering_angle(self, v, omega, wheelbase):
-        if omega == 0 or v == 0:
-            return 0
-
-        radius = v / omega
-        return math.atan(wheelbase / radius)
 
 
 if __name__ == '__main__':

@@ -10,6 +10,7 @@ import sys
 from goal import Goal
 from stopline import Stopline
 from ar_marker_pose import ar_marker_pose
+from lane_scan import LaneScan
 
 from ar_track_alvar_msgs.msg import AlvarMarkers
 from geometry_msgs.msg import PoseStamped
@@ -88,6 +89,7 @@ class GoalManager:
         self.via_point_update_flag = False
         
         self.stop_node = Stopline()
+        self.lane_node = LaneScan()
         # self.cancel_pub = rospy.Publisher("/move_base/cancel", GoalID, queue_size=1)
         self.goal_pub = rospy.Publisher("/move_base/goal", MoveBaseActionGoal, queue_size=1)
         # self.feedback_sub = rospy.Subscriber("/move_base/feedback", MoveBaseActionFeedback, self.proximity_cb)
@@ -172,18 +174,18 @@ class GoalManager:
         msg.doubles.append(param)
         res = srv(msg)
 
+    def lane_scan_pub(self):
+        self.lane_node.lane_pub_flag = self.goal_list[self.goal_cnt].lane
 
+    
     def reach_cb(self, msg):
         if msg.status.text == "Goal reached." and int(msg.status.goal_id.id) == self.goal_cnt:
             self.goal_cnt += 1
-            self.via_point_update_flag = False
             clearing = rospy.ServiceProxy('/move_base/clear_costmaps', Empty)
             res = clearing()
 
-            # # Closing remaining thread
-            if self.via_point_thread is not None:
-                self.via_point_thread.join()
-                self.via_point_thread = None
+            self.inflation_rad_call()
+            self.lane_scan_pub()
 
             if self.goal_cnt >= self.goal_num:
                 rospy.loginfo("Mission Finished.")
@@ -193,9 +195,6 @@ class GoalManager:
                 self.goal_pub.publish(self.goal_msg_generate())
 
                 # Threading when via_point is available
-                if self.goal_list[self.goal_cnt].via_points is not None:
-                    self.via_point_thread = threading.Thread(target=self.viapoint_update_pub, args=(self.goal_list[self.goal_cnt].via_points, ))
-                    self.via_point_thread.start()
         else:
             self.goal_pub.publish(self.goal_msg_generate())
 

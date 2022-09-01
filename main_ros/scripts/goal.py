@@ -17,10 +17,8 @@ class Goal:
 
         self.inflation_radius = inflation_rad
 
-        self.stop = False
-
-
-
+        self.stop_flag = False
+        self.lane_flag = True
     
     def xy_to_point(self):
         return Point(self.x + self.x_diff, self.y + self.y_diff, 0)
