@@ -31,5 +31,5 @@ local_costmap:
   
   lane_layer:
     observation_sources: lane_scan
-    lane_scan: {sensor_frame: lane_scan, data_type: LaserScan, topic: lane_scan, marking: false, clearing: true}
+    lane_scan: {sensor_frame: lane_scan, data_type: LaserScan, topic: lane_scan, marking: true, clearing: true}
 
