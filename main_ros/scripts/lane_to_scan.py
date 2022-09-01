@@ -52,6 +52,7 @@ class Publishint():
         theta_r = np.arctan2(rly, rlx)
         theta_r = np.where(theta_r > 0, theta_r, theta_r + np.pi)
         dist_r = np.sqrt(rlx**2 + rly**2)
+
         # for i in range( 0, len(llx) ):
         #     if (llx[i] > 0):
         #         theta_l.append(math.atan(lly[i]/llx[i]))
@@ -171,14 +172,27 @@ class Publishint():
                 ryp_mid = prev_ryp_mid
         except NameError:
             pass
-        flag = 0
-        
-        if (rp_mid - lp_mid > 450) and (200 < lyp_mid < 280):
+        flag = 1
+        flug = 1
+        # there are no lanes (flag = 1)
+        # non abs distance
+        # right lane is closer to middle
+        # publish right lane
+        if  (rx_pix[0]-rx_pix[-1] > 25 and abs(ryp_mid -240) < 40): #or (abs(ryp_mid -240) < 40)):#and (math.isnan(ryp_mid) is False)): #(320-lp_mid > rp_mid-320)
+            flug = 3
             for i in range(0, num_readings):
-                    #if (j == len(x)):
-                    #    break
-
-                    #if theta is within the increments
+                if (k < len(rmp_fin) and abs(i * scan.angle_increment - rmp_fin[k][0]< error )):
+                    try:
+                        idx = int(rmp_fin[k][0] / math.pi * num_readings)
+                        scan.ranges[idx] = rmp_fin[k][1]
+                        scan.intensities[idx] = 1
+                        k+=1
+                    except IndexError:
+                        pass
+        # publish left lane
+        elif (lx_pix[0]-lx_pix[-1] < -30 and abs(lyp_mid -240) < 40): #and (lyp_mid > 300): #(320-lp_mid < rp_mid-320)
+            flag = 3
+            for i in range(0, num_readings):
                 if (j < len(smp_fin) and abs(i * scan.angle_increment -smp_fin[j][0]) < error ):
                     try:
                         idx = int(smp_fin[j][0] / math.pi * num_readings)
@@ -188,12 +202,31 @@ class Publishint():
                         j+=1
                     except IndexError:
                         pass
+        #elif flag == 1:
+        #    print("no lane")
+        else:
+            pass
+        
+        if flag != 3 and (rp_mid - lp_mid > 450) and (200 < lyp_mid < 280):
+            for i in range(0, num_readings):
+                    #if (j == len(x)):
+                    #    break
+
+                    #if theta is within the increments
+                if (j < len(smp_fin) and abs(i * scan.angle_increment -smp_fin[j][0]) < error ):
+                    try:
+                        idx = int(smp_fin[j][0] / math.pi * num_readings)
+                        scan.ranges[idx] = smp_fin[j][1]
+                        scan.intensities[idx] = 1
+                        j+=1
+                    except IndexError:
+                        pass
                     #if use pass, there is time delay, resulting in error
         else:
             #print("left is false", lp_mid, rp_mid, lyp_mid, ryp_mid)
             flag = 1
         
-        if (rp_mid - lp_mid > 450) and (200 < ryp_mid < 280):
+        if flug != 3 and (rp_mid - lp_mid > 450) and (200 < ryp_mid < 280):
             flag = 0    
             for i in range(0, num_readings):
                 if (k < len(rmp_fin) and abs(i * scan.angle_increment - rmp_fin[k][0]< error )):
@@ -207,38 +240,6 @@ class Publishint():
                         pass
         else:
             #print("right is false", lp_mid, rp_mid, lyp_mid, ryp_mid)
-            pass
-        
-        # there are no lanes (flag = 1)
-        # non abs distance
-        # right lane is closer to middle
-        # publish left lane
-        if  (flag == 1) and (lx_pix[0]-lx_pix[-1] < -30 or (abs(ryp_mid -240)> 30)):#and (math.isnan(ryp_mid) is False)): #(320-lp_mid > rp_mid-320)
-            for i in range(0, num_readings):
-                if (j < len(smp_fin) and abs(i * scan.angle_increment -smp_fin[j][0]) < error ):
-                    try:
-                        idx = int(smp_fin[j][0] / math.pi * num_readings)
-                        scan.ranges[idx] = smp_fin[j][1]
-                        # print(smp_fin[j][1])
-                        scan.intensities[idx] = 1
-                        j+=1
-                    except IndexError:
-                        pass
-        # publish right lane
-        elif (flag == 1): #and (lyp_mid > 300): #(320-lp_mid < rp_mid-320)
-            for i in range(0, num_readings):
-                if (k < len(rmp_fin) and abs(i * scan.angle_increment - rmp_fin[k][0]< error )):
-                    try:
-                        idx = int(rmp_fin[k][0] / math.pi * num_readings)
-                        scan.ranges[idx] = rmp_fin[k][1]
-                        # print(rmp_fin[k][1])
-                        scan.intensities[idx] = 1
-                        k+=1
-                    except IndexError:
-                        pass
-        #elif flag == 1:
-        #    print("no lane")
-        else:
             pass
         scan_pub.publish(scan)
 
@@ -317,7 +318,7 @@ def warp_process_image(img):
     #cv2.rectangle(lane, (0,Height-80), (20,Height), (0,0,0), -1)
     #cv2.rectangle(lane, (Width-20,Height-100), (Width+40,Height), (0,0,0), -1)
 
-    # cv2.imshow("lane", lane)
+    #cv2.imshow("lane", lane)
 
     histogram = np.sum(lane[lane.shape[0]//2:,:],   axis=0)      
     midpoint = np.int(histogram.shape[0]/2)
@@ -487,20 +488,7 @@ def start():
         minpix = 5
         lane_bin_th = 180#180
 
-        warp_src  = np.array([
-            [Width*1/5 + 30, Height*1/2 + 40],
-            [0,Height-82],
-            [Width*4/5 - 15, Height*1/2 + 40],
-            [Width,Height-82]
-        ], dtype=np.float32)
 
-        warp_dist = np.array([
-            [-40,0],
-            [40, Height], #0
-            [Width+40,0],
-            [Width-40, Height]
-        ], dtype=np.float32)
-        ''''
         warp_src  = np.array([
             [Width*1/5 + 30, Height*1/2 + 40],
             [0,Height-82],
@@ -515,8 +503,8 @@ def start():
             [Width+40,0],
             [Width-40, Height]
         ], dtype=np.float32)
-        '''
-        # cv2.imshow("original", image)
+        
+        #cv2.imshow("original", image)
         warp_img, _, _ = warp_image(image, warp_src, warp_dist, (warp_img_w, warp_img_h))
 
         global left_fit
@@ -537,7 +525,7 @@ def start():
         #x:24.5cm
         #130
         #cv2.imshow("warp_img", warp_img)
-        #cv2.waitKey(1)
+        cv2.waitKey(1)
 
 
 if __name__ == '__main__':
