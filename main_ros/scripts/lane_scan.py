@@ -4,7 +4,7 @@
 import numpy as np
 import cv2, math
 import rospy
-
+import time
 from sensor_msgs.msg import Image
 from cv_bridge import CvBridge
 from math import *
@@ -44,9 +44,10 @@ class LaneScan:
 
         rospy.wait_for_message("/usb_cam/image_rect", Image)
         
-        self.scan_pub = rospy.Publisher('lane_scan', LaserScan, queue_size=1)
+        self.scan_pub = rospy.Publisher('lane_scan', LaserScan, queue_size=50)
         rospy.Subscriber("/usb_cam/image_rect", Image, self.img_callback)
-        rospy.loginfo("Lane to Scan Initialized!")      
+        rospy.loginfo("Lane to Scan Initialized!")
+        self.time = time.time()
 
 
     def lane_pub(self, llx , rlx, lly, rly, lx_pix, rx_pix, ly_pix, ry_pix):
@@ -233,7 +234,7 @@ class LaneScan:
         warp_img, _, _ = self.warp_image(image, self.warp_src, self.warp_dist, (self.warp_img_w, self.warp_img_h))
         _, _, lxp, rxp, lyp, ryp = self.warp_process_image(warp_img)
         self.lane_pub(lxp, rxp, lyp, ryp, self.lx, self.rx, self.lly, self.rly)
-        cv2.imshow("out_img", self.out_img)
+        # cv2.imshow("out_img", self.out_img)
         cv2.waitKey(1)
 
 

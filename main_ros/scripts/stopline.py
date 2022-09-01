@@ -67,7 +67,7 @@ class Stopline:
         _, L, _ = cv2.split(cv2.cvtColor(blur, cv2.COLOR_BGR2HLS))
         lane = cv2.adaptiveThreshold(L, 255, cv2.ADAPTIVE_THRESH_MEAN_C, cv2.THRESH_BINARY_INV, 21, 10)
         #_, lane = cv2.threshold(L, 127, 255, cv2.THRESH_BINARY)
-        cv2.imshow("lane", lane)
+        # cv2.imshow("lane", lane)
         cv2.waitKey(1)
         
         num_white_pix = int(np.sum(lane == 255))

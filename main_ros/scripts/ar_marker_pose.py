@@ -10,17 +10,20 @@ from geometry_msgs.msg import PoseStamped
 def ar_marker_pose(tf_listener, id):
     target_frame = "ar_marker_"+str(id)
     src_frame = "map"
-
-    tf_listener.waitForTransform(src_frame, target_frame, rospy.Time(), rospy.Duration(1.0))
+    
     try:
+        tf_listener.waitForTransform(src_frame, target_frame, rospy.Time(), rospy.Duration(1.0))
         now = rospy.Time.now()
         tf_listener.waitForTransform(target_frame, src_frame, now, rospy.Duration(1.0))
         trans, rot = tf_listener.lookupTransform(src_frame, target_frame, now)
+        rospy.loginfo("AR Marker: %f", id)
+        return trans
 
     except Exception as E:
         rospy.logwarn(E)
+        return [None, None, None]
         
-    return trans
+    
 
 if __name__ == "__main__":
     import tf

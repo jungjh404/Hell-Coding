@@ -299,7 +299,7 @@ def warp_process_image(img):
     cv2.rectangle(lane, (0,Height-80), (20,Height), (0,0,0), -1)
     cv2.rectangle(lane, (Width-20,Height-100), (Width+40,Height), (0,0,0), -1)
 
-    cv2.imshow("lane", lane)
+    # cv2.imshow("lane", lane)
 
     histogram = np.sum(lane[lane.shape[0]//2:,:],   axis=0)      
     midpoint = np.int(histogram.shape[0]/2)

@@ -64,26 +64,25 @@ class GoalManager:
         #                 ]
 
         # for 0829
-        self.goal_list = [
-                        Goal(x=14.227601,   y=-1.109821,     yaw=math.degrees(0.7075164)),
-                        Goal(x=14.748132,   y=1.421688,     yaw=math.degrees(1.4447077)),         # t-parking tag found
-                        Goal(x=15.463900,   y=7.646256,     yaw=math.degrees(2.4558618)),         # 2nd corner
-                        Goal(x=1.110168,    y=9.689941,     yaw=math.degrees(-2.6658999)),        # 3rd corner (just before warigari)
-                        Goal(x=0.757480,    y=7.121173,     yaw=math.degrees(-1.5707963)),        # warigari 1
-                        Goal(x=0.066044,    y=5.416704,     yaw=math.degrees(-1.675673)),         # warigari 2
-                        Goal(x=0.355482,    y=3.358477,     yaw=math.degrees(-1.6099938)),        # warigari 3
-                        Goal(x=-0.802270,   y=1.863046,     yaw=math.degrees(-1.5880358)),        # warigari 4
-                        Goal(x=-0.705791,   y=0.978651,     yaw=math.degrees(-0.8345376))         # 4th corner (just before start)
-                        ]
+        # self.goal_list = [
+        #                 Goal(x=14.227601,   y=-1.109821,     yaw=math.degrees(0.7075164)),
+        #                 Goal(x=14.748132,   y=1.421688,     yaw=math.degrees(1.4447077)),         # t-parking tag found
+        #                 Goal(x=15.463900,   y=7.646256,     yaw=math.degrees(2.4558618)),         # 2nd corner
+        #                 Goal(x=1.110168,    y=9.689941,     yaw=math.degrees(-2.6658999)),        # 3rd corner (just before warigari)
+        #                 Goal(x=0.757480,    y=7.121173,     yaw=math.degrees(-1.5707963)),        # warigari 1
+        #                 Goal(x=0.066044,    y=5.416704,     yaw=math.degrees(-1.675673)),         # warigari 2
+        #                 Goal(x=0.355482,    y=3.358477,     yaw=math.degrees(-1.6099938)),        # warigari 3
+        #                 Goal(x=-0.802270,   y=1.863046,     yaw=math.degrees(-1.5880358)),        # warigari 4
+        #                 Goal(x=-0.705791,   y=0.978651,     yaw=math.degrees(-0.8345376))         # 4th corner (just before start)
+        #                 ]
 
         ## for dong-bang
-        # self.goal_list=[
-        #     Goal(x=5, y=0, yaw=180, via_points=[[7,0.5],[6,-0.5]]),
-        #     Goal(x=2, y=0, yaw=180, via_points=[[4,0],[3,0]])
-        # ]
+        self.goal_list=[
+            Goal(x=8, y=-1, yaw=-90)
+        ]
         # [12.5, 0], [12, 0.3], [11.5, 0], [11, -0.3]
         self.goal_num = len(self.goal_list)
-        self.marker_to_goal_dict = {1:2, 2:3, 8:7} # Goal: goal_idx
+        self.marker_to_goal_dict = {1:1, 2:3, 8:7} # Goal: goal_idx
         self.rate = rospy.Rate(10)
         self.proximity_radius = 0.4 ##
         self.via_point_update_flag = False
@@ -175,23 +174,20 @@ class GoalManager:
         res = srv(msg)
 
     def lane_scan_pub(self):
-        self.lane_node.lane_pub_flag = self.goal_list[self.goal_cnt].lane
+        self.lane_node.lane_pub_flag = self.goal_list[self.goal_cnt].lane_flag
 
     
     def reach_cb(self, msg):
         if msg.status.text == "Goal reached." and int(msg.status.goal_id.id) == self.goal_cnt:
             self.goal_cnt += 1
-            clearing = rospy.ServiceProxy('/move_base/clear_costmaps', Empty)
-            res = clearing()
-
-            self.inflation_rad_call()
-            self.lane_scan_pub()
 
             if self.goal_cnt >= self.goal_num:
                 rospy.loginfo("Mission Finished.")
                 sys.exit(0)
             
             else:
+                self.inflation_rad_call()
+                self.lane_scan_pub()
                 self.goal_pub.publish(self.goal_msg_generate())
 
                 # Threading when via_point is available
@@ -207,21 +203,25 @@ class GoalManager:
             target = self.marker_to_goal_dict[marker.id]
             trans = ar_marker_pose(self.tf_listener, marker.id)
 
-            if marker.id == 1:
-                self.goal_list[target].x = trans[0] + 1.700
-                self.goal_list[target].y = trans[1] - 0.45
-                self.goal_list[target + 1].x = trans[0] + 0.595
-                self.goal_list[target + 1].y = trans[1] + 0.352
-            
-            if marker.id == 2:
-                self.goal_list[target].x = trans[0] - 0.905
+            if trans[0] is not None:
+                self.goal_list[target].x = trans[0]
                 self.goal_list[target].y = trans[1]
 
-            if marker.id == 8:
-                self.goal_list[target].x = trans[0] - 0.5
-                self.goal_list[target].y = trans[1] + 2.3
-                self.goal_list[target + 2].x = trans[0] + 0.65
-                self.goal_list[target + 2].y = trans[1] + 1.5
+            # if marker.id == 1:
+            #     self.goal_list[target].x = trans[0] + 1.700
+            #     self.goal_list[target].y = trans[1] - 0.45
+            #     self.goal_list[target + 1].x = trans[0] + 0.595
+            #     self.goal_list[target + 1].y = trans[1] + 0.352
+            
+            # if marker.id == 2:
+            #     self.goal_list[target].x = trans[0] - 0.905
+            #     self.goal_list[target].y = trans[1]
+
+            # if marker.id == 8:
+            #     self.goal_list[target].x = trans[0] - 0.5
+            #     self.goal_list[target].y = trans[1] + 2.3
+            #     self.goal_list[target + 2].x = trans[0] + 0.65
+            #     self.goal_list[target + 2].y = trans[1] + 1.5
 
 
     def proximity_cb(self, msg):

@@ -5,7 +5,7 @@ from tf.transformations import quaternion_from_euler
 from geometry_msgs.msg import Point, Quaternion
 
 class Goal:
-    def __init__(self, x, y, yaw, via_points=None, x_diff=0, y_diff=0, inflation_rad=0.2, stop=False):
+    def __init__(self, x, y, yaw, via_points=None, x_diff=0, y_diff=0, inflation_rad=0.2, stop=False, lane=True):
         self.x = x
         self.y = y
         self.yaw = yaw
@@ -17,8 +17,8 @@ class Goal:
 
         self.inflation_radius = inflation_rad
 
-        self.stop_flag = False
-        self.lane_flag = True
+        self.stop_flag = stop
+        self.lane_flag = lane
     
     def xy_to_point(self):
         return Point(self.x + self.x_diff, self.y + self.y_diff, 0)

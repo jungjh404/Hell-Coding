@@ -21,11 +21,11 @@
     <node name="image_proc" pkg="image_proc" type="image_proc" ns="usb_cam"/>
 
     <!-- Motor -->
-    <include file="$(find hell_coding)/launch/hell_motor.launch">
+    <!-- <include file="$(find hell_coding)/launch/hell_motor.launch">
         <arg name="goal_manager" value="$(arg goal_manager)"/>
         <arg name="idx" value="$(arg idx)"/>
-    </include>
-    <node pkg="hell_coding" name="lane_to_scan" type="lane_to_scan.py"/>
+    </include> -->
+    <!-- <node pkg="hell_coding" name="costmap_clear_node" type="costmap_clear_node.py" respawn="true"/> -->
     <node pkg="hell_coding" name="init_odom" type="init_odom.py"/>
 
     <!-- <node pkg="hell_coding" name="init_odom_ackr" type="init_odom_ackr.py"/> -->
