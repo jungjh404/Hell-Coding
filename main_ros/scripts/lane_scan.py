@@ -47,7 +47,6 @@ class LaneScan:
         self.scan_pub = rospy.Publisher('lane_scan', LaserScan, queue_size=50)
         rospy.Subscriber("/usb_cam/image_rect", Image, self.img_callback)
         rospy.loginfo("Lane to Scan Initialized!")
-        self.time = time.time()
 
 
     def lane_pub(self, llx , rlx, lly, rly, lx_pix, rx_pix, ly_pix, ry_pix):
@@ -63,8 +62,10 @@ class LaneScan:
         theta_r = np.where(theta_r > 0, theta_r, theta_r + np.pi)
         dist_r = np.sqrt(rlx**2 + rly**2)
 
-        dict = {name:value for name, value in zip(theta_l, dist_l)}
-        dict_r = {name:value for name, value in zip(theta_r, dist_r)}
+        # dict = {name:value for name, value in zip(theta_l, dist_l)}
+        # dict_r = {name:value for name, value in zip(theta_r, dist_r)}
+        # dict_l = np.stack((theta_l, dist_l), axis=1)
+        # dict_r = np.stack((theta_r, dist_r), axis=1)
 
         l1=0
         l2=0
@@ -83,32 +84,40 @@ class LaneScan:
             r2 = float(np.percentile(theta_r , 50, interpolation='linear'))
             r3 = float(np.percentile(theta_r , 75, interpolation='linear'))
 
-        s1 = sorted({key:value for key, value in dict.items() if key < l1}.items()) # if key < l1
-        s2 = sorted({key:value for key, value in dict.items() if key >= l1 and key < l2}.items())
-        s3 = sorted({key:value for key, value in dict.items() if key >= l2 and key < l3}.items())
-        s4 = sorted({key:value for key, value in dict.items() if key >= l3}.items())
+        s1 = np.sort(dist_l[np.where(theta_l < l1)])
+        s2 = np.sort(dist_l[np.where((theta_l < l2) & (theta_l >= l1))])
+        s3 = np.sort(dist_l[np.where((theta_l < l3) & (theta_l >= l2))])
+        s4 = np.sort(dist_l[np.where(theta_l >= l3)])
+        # s1 = sorted({key:value for key, value in dict.items() if key < l1}.items()) # if key < l1
+        # s2 = sorted({key:value for key, value in dict.items() if key >= l1 and key < l2}.items())
+        # s3 = sorted({key:value for key, value in dict.items() if key >= l2 and key < l3}.items())
+        # s4 = sorted({key:value for key, value in dict.items() if key >= l3}.items())
         
-        p1 = sorted({key:value for key, value in dict_r.items() if key < r1}.items())
-        p2 = sorted({key:value for key, value in dict_r.items() if key >= r1 and key < r2}.items())
-        p3 = sorted({key:value for key, value in dict_r.items() if key >= r2 and key < r3}.items())
-        p4 = sorted({key:value for key, value in dict_r.items() if key >= r3}.items())
+        p1 = np.sort(dist_r[np.where(theta_r < r1)])
+        p2 = np.sort(dist_r[np.where((theta_r < r2) & (theta_r >= r1))])
+        p3 = np.sort(dist_r[np.where((theta_r < r3) & (theta_r >= r2))])
+        p4 = np.sort(dist_r[np.where(theta_r >= r3)])
 
-        #print(p1)
-
+        # p1 = sorted({key:value for key, value in dict_r.items() if key < r1}.items())
+        # p2 = sorted({key:value for key, value in dict_r.items() if key >= r1 and key < r2}.items())
+        # p3 = sorted({key:value for key, value in dict_r.items() if key >= r2 and key < r3}.items())
+        # p4 = sorted({key:value for key, value in dict_r.items() if key >= r3}.items())
+        
         smp1 = s1[::self.cnt(s1)]
         smp2 = s2[::self.cnt(s2)]
         smp3 = s3[::self.cnt(s3)]
         smp4 = s4[::self.cnt(s4)]
         # cnt(np.array(s1))
-        smp_fin = smp1 + smp2 + smp3 + smp4
-        # print(len(smp1))
-        # print(len(smp_fin))
+        smp_fin = np.concatenate((smp1, smp2, smp3, smp4))
+        # smp_fin = smp1 + smp2 + smp3 + smp4
+        
         rmp1 = p1[::self.cnt(p1)]
         rmp2 = p2[::self.cnt(p2)]
         rmp3 = p3[::self.cnt(p3)]
         rmp4 = p4[::self.cnt(p4)]
 
-        rmp_fin = rmp1 + rmp2 + rmp3 + rmp4
+        rmp_fin = np.concatenate((rmp1, rmp2, rmp3, rmp4))
+        # rmp_fin = rmp1 + rmp2 + rmp3 + rmp4
         
         current_time = rospy.Time.now()
         
@@ -221,6 +230,7 @@ class LaneScan:
         self.prev_ryp_mid = ryp_mid
 
 
+
     def cnt(self, arr):
         r = 0
         if (len(arr)/50) == 0:
@@ -235,7 +245,7 @@ class LaneScan:
         _, _, lxp, rxp, lyp, ryp = self.warp_process_image(warp_img)
         self.lane_pub(lxp, rxp, lyp, ryp, self.lx, self.rx, self.lly, self.rly)
         # cv2.imshow("out_img", self.out_img)
-        cv2.waitKey(1)
+        # cv2.waitKey(1)
 
 
     def warp_image(self, img, src, dst, size):
@@ -339,8 +349,9 @@ class LaneScan:
 
 
 if __name__ == '__main__':
-    rospy.init_node('lane_to_scan', annoymous=True)
+    rospy.init_node('lane_to_scan', anonymous=True)
     try:
         a = LaneScan()
+        rospy.spin()
     except KeyboardInterrupt:
         exit(0)

@@ -1,0 +1,6 @@
+image: lane_map.pgm
+resolution: 0.016978984
+origin: [-16.800000, -11.850000, 0.000000]
+negate: 0
+occupied_thresh: 0.65
+free_thresh: 0.196

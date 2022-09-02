@@ -84,42 +84,9 @@ class Stopline:
 
         if num_white_pix > total_num_of_pix * min_threshold:
             detected = True
-            print("####detected####")
+            # print("####detected####")
         
         return detected
-
-
-    def start(self):
-        
-        while not self.image.size == (Width * Height * 3):
-            continue
-        
-        rospy.loginfo("Stopline Initialized!")
-        r = rospy.Rate(10)
-
-        while not rospy.is_shutdown():
-            warp_det_src = np.array([
-                [Width*1/5 + 30, Height*1/2+40],
-                [0,Height-10],
-                [Width*4/5 - 15, Height*1/2+40],
-                [Width,Height-30]
-            ], dtype = np.float32)
-
-
-            warp_det_dist = np.array([
-                [-40,0],
-                [40, Height], #0
-                [Width+40,0],
-                [Width-40, Height]
-            ], dtype = np.float32)
-
-            warp_det_img, _, _ = self.warp_image(self.image, warp_det_src, warp_det_dist, (Width, Height))
-            
-            self.stop = self.detect(warp_det_img)
-            # r.sleep()
-            cv2.imshow("warp_det_img", warp_det_img)
-            cv2.waitKey(1)
-            #cv2.imshow("warp_img", warp_img)
 
 
 if __name__ == '__main__':

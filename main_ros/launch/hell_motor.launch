@@ -3,9 +3,12 @@
   <arg name="angle_offset" default="0" />
   <arg name="goal_manager" default="false"/>
   <arg name="idx" default="0"/>
+  <arg name="odom_rate" default="1.1"/>
 
   <group unless="$(arg motor_type)">
-    <include file="$(find vesc_driver)/launch/vesc_drive_xycar_motor.launch" />
+    <include file="$(find vesc_driver)/launch/vesc_drive_xycar_motor.launch">
+      <arg name="odom_rate" value="$(arg odom_rate)"/>
+    </include>
   </group>
 
   <node name="hell_motor" pkg="hell_coding" type="hell_motor.py" output="screen" args="$(arg goal_manager) $(arg idx)">

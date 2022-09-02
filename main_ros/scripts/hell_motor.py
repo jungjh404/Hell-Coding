@@ -39,7 +39,8 @@ class motor:
         self.stop_cnt = 0
         deviceSetFunc[self.motor_type]()
         self.set_parameter()
-        self.ros_init(goal_manager=="true", idx)        
+        self.ros_init(goal_manager=="true", idx)
+        rospy.loginfo("Hell Motor Initialized")        
         rospy.spin()
 
     def set_parameter(self):
@@ -99,9 +100,10 @@ class motor:
 
         # rospy.Subscriber("cmd_vel", Twist, self.dwa_ackermann_callback, queue_size=1) # when using teb local planner
         rospy.Subscriber("cmd_vel", Twist, self.teb_ackermann_callback, queue_size=1) # when using teb local planner
-
+        
         if goal_manager:
             self.gm = GoalManager(idx)
+            print(self.gm)
 
         self.angle_offset = rospy.get_param("~angle_offset")
         self.motor_type = rospy.get_param("~motor_type")
@@ -156,11 +158,12 @@ class motor:
     def teb_ackermann_callback(self, msg):
         speed = msg.linear.x
         steering_angle = -msg.angular.z
-                
+        
         if self.gm is not None:
             if self.gm.stop_node.detected and self.stop_cnt == 0 and self.gm.goal_list[self.gm.goal_cnt].stop_flag:
                 speed = 0
                 self.auto_drive(steering_angle, speed)
+                rospy.loginfo("Stop Line Detected")
                 rospy.sleep(3.)
                 self.stop_cnt += 1
 

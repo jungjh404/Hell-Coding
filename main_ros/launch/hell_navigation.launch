@@ -1,50 +1,48 @@
 <launch>
     <!-- Arguments -->
     <arg name="model" default="$(env TURTLEBOT3_MODEL)" doc="model type [burger, waffle, waffle_pi]"/>
-    <arg name="map_file" default="$(find hell_coding)/map/map.yaml"/>
-    <!-- <arg name="map_file" default="$(find hell_coding)/map/kookmin_0830.yaml"/> -->
+    <!-- <arg name="map_file" default="$(find hell_coding)/map/map.yaml"/> -->
     <arg name="open_rviz" default="true"/>
     <arg name="move_forward_only" default="false"/>
+    <arg name="map_file" default="$(find hell_coding)/map/kmu_mission.yaml"/>
+    <arg name="lane_map_file" default="$(find hell_coding)/map/kmu_mission_costmap.yaml"/>
     <arg name="goal_manager" default="false"/>
     <arg name="idx" default="0"/>
+    <arg name="expo" default="50"/>
+    <arg name="odom_rate" default="1.1"/>
 
     <!-- URDF -->
     <include file="$(find hell_coding_urdf)/launch/display.launch"/>
 
     <!-- Sensor -->
     <include file="$(find xycar_lidar)/launch/xycar_lidar.launch" />
-    <!-- <include file="$(find xycar_imu)/launch/xycar_imu.launch" /> -->
-    <include file="$(find usb_cam)/launch/xycar_cam.launch" />
+    <include file="$(find usb_cam)/launch/xycar_cam.launch">
+        <arg name="expo" value="$(arg expo)"/>
+    </include>
     <node pkg="hell_coding" name="hell_ultrasonic" type="hell_ultrasonic.py"/>
     
     <!-- Image Recitification -->
     <node name="image_proc" pkg="image_proc" type="image_proc" ns="usb_cam"/>
 
     <!-- Motor -->
-    <!-- <include file="$(find hell_coding)/launch/hell_motor.launch">
+    <include file="$(find hell_coding)/launch/hell_motor.launch">
         <arg name="goal_manager" value="$(arg goal_manager)"/>
         <arg name="idx" value="$(arg idx)"/>
-    </include> -->
-    <!-- <node pkg="hell_coding" name="costmap_clear_node" type="costmap_clear_node.py" respawn="true"/> -->
+        <arg name="odom_rate" value="$(arg odom_rate)"/>
+    </include>
+    <node pkg="hell_coding" name="costmap_clear_node" type="costmap_clear_node.py" respawn="true"/>
     <node pkg="hell_coding" name="init_odom" type="init_odom.py"/>
-
-    <!-- <node pkg="hell_coding" name="init_odom_ackr" type="init_odom_ackr.py"/> -->
 
 
     <!-- ORB SLAM -->
     <!-- <include file="$(find hell_coding)/launch/orb_slam2_xycar.launch"/> -->
 
-    <!-- robot_pose_ekf -->
-    <!-- <include file="$(find robot_pose_ekf)/robot_pose_ekf.launch"/> -->
-
     <!-- Map server -->
     <node pkg="map_server" name="map_server" type="map_server" args="$(arg map_file)"/>
-    <!-- <node pkg="map_server" name="lane_map_server" type="map_server" ns="lane" args="$(arg lane_map_file)"/> -->
+    <node pkg="map_server" name="lane_map_server" type="map_server" ns="lane" args="$(arg lane_map_file)"/>
 
     <!-- AMCL -->
-    <!-- <include file="$(find turtlebot3_navigation)/launch/amcl.launch"/> -->
     <include file="$(find hell_coding)/launch/amcl_localization.launch"/>
-    <!-- <node pkg="hell_coding" name="odom_ekf" type="odom_ekf.py"/> -->
 
     <!-- move_base -->
     <include file="$(find hell_coding)/launch/move_base.launch">

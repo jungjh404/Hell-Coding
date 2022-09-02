@@ -78,7 +78,7 @@ class GoalManager:
 
         ## for dong-bang
         self.goal_list=[
-            Goal(x=8, y=-1, yaw=-90)
+            Goal(x=-0.5, y=9.5, yaw=-175, stop=True)
         ]
         # [12.5, 0], [12, 0.3], [11.5, 0], [11, -0.3]
         self.goal_num = len(self.goal_list)
@@ -88,8 +88,8 @@ class GoalManager:
         self.via_point_update_flag = False
         
         self.stop_node = Stopline()
-        self.lane_node = LaneScan()
-        # self.cancel_pub = rospy.Publisher("/move_base/cancel", GoalID, queue_size=1)
+        # self.lane_node = LaneScan()
+
         self.goal_pub = rospy.Publisher("/move_base/goal", MoveBaseActionGoal, queue_size=1)
         # self.feedback_sub = rospy.Subscriber("/move_base/feedback", MoveBaseActionFeedback, self.proximity_cb)
         # self.via_pub = rospy.Publisher('/move_base/TebLocalPlannerROS/via_points', Path, queue_size=1)
@@ -110,8 +110,10 @@ class GoalManager:
 
         self.res_sub = rospy.Subscriber("/move_base/result", MoveBaseActionResult, self.reach_cb)
 
+        self.inflation_rad_call()
+        # self.lane_scan_pub()
         self.goal_pub.publish(self.goal_msg_generate())
-        rospy.spin()
+        # rospy.spin()
 
 
     def viapoint_update_pub(self, via_points): ##
@@ -187,7 +189,7 @@ class GoalManager:
             
             else:
                 self.inflation_rad_call()
-                self.lane_scan_pub()
+                # self.lane_scan_pub()
                 self.goal_pub.publish(self.goal_msg_generate())
 
                 # Threading when via_point is available
