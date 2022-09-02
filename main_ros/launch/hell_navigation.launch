@@ -21,7 +21,7 @@
     <include file="$(find hell_coding_urdf)/launch/display.launch"/>
 
     <!-- Sensor -->
-    <!-- <include file="$(find xycar_lidar)/launch/xycar_lidar.launch"/> -->
+    <include file="$(find xycar_lidar)/launch/xycar_lidar.launch"/>
     <include file="$(find usb_cam)/launch/xycar_cam.launch">
         <arg name="expo" value="$(arg expo)"/>
     </include>
@@ -48,8 +48,8 @@
     <node pkg="map_server" name="lane_map_server" type="map_server" ns="lane" args="$(arg lane_map_file)"/>
 
     <!-- AMCL -->
-    <!-- <include file="$(find hell_coding)/launch/amcl_localization.launch"/> -->
-    <node pkg="tf" name="static_transform_publisher" type="static_transform_publisher" args="0.687 0.366 0 -0.12 0 0 map odom 100"/>
+    <include file="$(find hell_coding)/launch/amcl_localization.launch"/>
+    <!-- <node pkg="tf" name="static_transform_publisher" type="static_transform_publisher" args="0.687 0.366 0 -0.12 0 0 map odom 100"/> -->
 
     <!-- move_base -->
     <include file="$(find hell_coding)/launch/move_base.launch">

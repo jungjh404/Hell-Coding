@@ -25,83 +25,32 @@ from dynamic_reconfigure.srv import Reconfigure
 class GoalManager:
     def __init__(self, idx):
         self.goal_cnt = idx
-        ## for mission driving
-        # self.goal_list = [
-        #                 Goal(x=0.612760,    y=0.299775,     yaw=math.degrees(-0.1275164)),        # start point
-        #                 Goal(x=4.953308,    y=-0.18,        yaw=math.degrees(-0.1056652)),        # p-parking tag found
-        #                 Goal(x=7.761093,    y=-0.477736,    yaw=math.degrees(-0.1040991)),        # p-parking exit
-        #                 Goal(x=6.887442,    y=-1.127816,    yaw=math.degrees(-0.0906591)),        # p-parking complete
-        #                 Goal(x=8.261093,    y=-0.477736,    yaw=math.degrees(-0.1040991)),        # p-parking exit
-        #                 Goal(x=14.227601,   y=-1.209821,    yaw=math.degrees(0.8419409)),         # 1st corner (in ternnel)
-        #                 Goal(x=14.748132,   y=1.421688,     yaw=math.degrees(1.4447077)),         # t-parking tag found
-        #                 Goal(x=15.346061,   y=4.123437,     yaw=math.degrees(1.4601398)),         # just before t-parking complete
-        #                 Goal(x=15.168897,   y=4.699220,     yaw=math.degrees(1.8925488)),         ## (is it necessary?) rotation for t-parking start
-        #                 Goal(x=15.766825,   y=3.591946,     yaw=math.degrees(3.0090416)),         # t-parking complete
-        #                 Goal(x=15.157824,   y=4.957056,     yaw=math.degrees(1.4670029)),         # t-parking exit
-        #                 Goal(x=15.763900,   y=7.646256,     yaw=math.degrees(2.4558618)),         # 2nd corner
-        #                 Goal(x=9.746145,    y=8.729162,     yaw=math.degrees(3.0850491)),         # just before stop line
-        #                 Goal(x=1.110168,    y=9.689941,     yaw=math.degrees(-2.6658999)), stop=true        # 3rd corner (just before warigari)
-        #                 Goal(x=0.757480,    y=7.121173,     yaw=math.degrees(-1.5707963)),        # warigari 1
-        #                 Goal(x=0.066044,    y=5.416704,     yaw=math.degrees(-1.675673)),         # warigari 2
-        #                 Goal(x=0.355482,    y=3.358477,     yaw=math.degrees(-1.6099938)),        # warigari 3
-        #                 Goal(x=-0.802270,   y=1.863046,     yaw=math.degrees(-1.5880358)),        # warigari 4
-        #                 Goal(x=-0.705791,   y=0.978651,     yaw=math.degrees(-0.8345376))         # 4th corner (just before start 
-        #                 ]
-
-        # for speed driving
-        # self.goal_list = [
-        #                 Goal(x=0.612760,    y=0.299775,     yaw=math.degrees(-0.1275164)),        # start point
-                    
-        #                 Goal(x=14.527601,   y=-0.909821,    yaw=math.degrees(0.8419409)),         # 1st corner (in ternnel)
-        #                 Goal(x=14.748132,   y=1.421688,     yaw=math.degrees(1.4447077)),         # t-parking tag found
-        #                 Goal(x=15.763900,   y=7.646256,     yaw=math.degrees(2.4558618)),         # 2nd corner
-        #                 Goal(x=0.310168,    y=9.689941,     yaw=math.degrees(-2.6658999)),        # 3rd corner (just before warigari)
-        #                 Goal(x=0.757480,    y=7.121173,     yaw=math.degrees(-1.5707963)),        # warigari 1
-        #                 Goal(x=0.066044,    y=5.416704,     yaw=math.degrees(-1.675673)),         # warigari 2
-        #                 Goal(x=0.355482,    y=3.358477,     yaw=math.degrees(-1.6099938)),        # warigari 3
-        #                 Goal(x=-0.802270,   y=1.863046,     yaw=math.degrees(-1.5880358)),        # warigari 4
-        #                 Goal(x=-0.705791,   y=0.978651,     yaw=math.degrees(-0.8345376))         # 4th corner (just before start)
-        #                 ]
-
-        # for 0829
-        # self.goal_list = [
-        #                 Goal(x=14.227601,   y=-1.109821,     yaw=math.degrees(0.7075164)),
-        #                 Goal(x=14.748132,   y=1.421688,     yaw=math.degrees(1.4447077)),         # t-parking tag found
-        #                 Goal(x=15.463900,   y=7.646256,     yaw=math.degrees(2.4558618)),         # 2nd corner
-        #                 Goal(x=1.110168,    y=9.689941,     yaw=math.degrees(-2.6658999)),        # 3rd corner (just before warigari)
-        #                 Goal(x=0.757480,    y=7.121173,     yaw=math.degrees(-1.5707963)),        # warigari 1
-        #                 Goal(x=0.066044,    y=5.416704,     yaw=math.degrees(-1.675673)),         # warigari 2
-        #                 Goal(x=0.355482,    y=3.358477,     yaw=math.degrees(-1.6099938)),        # warigari 3
-        #                 Goal(x=-0.802270,   y=1.863046,     yaw=math.degrees(-1.5880358)),        # warigari 4
-        #                 Goal(x=-0.705791,   y=0.978651,     yaw=math.degrees(-0.8345376))         # 4th corner (just before start)
-        #                 ]
-
 
         ##### M I S S I O N  G O A L #####
         # Goal(x, y, yaw, inflation_rad=0.2, stop=False)
         # Goal(x=14.858,  y=4.281,     yaw=103.631,    inflation_rad=0.05),           
-        self.goal_list = [
-                        Goal(x=8.045,   y=-0.398,   yaw=-5.105,  inflation_rad=0.05),               #0 before p-parking
-                        Goal(x=6.654,   y=-1.281,   yaw=-3.019, inflation_rad=0.05),                #1 p-parking complete
-                        Goal(x=8.698,   y=-0.424,     yaw=-4.874, inflation_rad=0.05),              #2 after p-parking
-                        Goal(x=14.631,  y=0.974,     yaw=84.169, inflation_rad=0.05),               #3 after tunnel
-                        Goal(x=14.858,  y=4.281,     yaw=84.169,    inflation_rad=0.05),            #4 before t-parking
-                        Goal(x=16.086,  y=3.659,    yaw=174.035, inflation_rad=0.0),                #5 t-parking complete
-                        Goal(x=13.750,    y=8.025,     yaw=170.188, inflation_rad=0.05),            #7 before_obstacle
-                        Goal(x=9.068,    y=8.523,     yaw=173.320, inflation_rad=0.05),             #8 after_obstacle
-                        Goal(x=1.802,    y=9.381,     yaw=174.721, inflation_rad=0.05, stop=True),  #9 stop_line
-                        Goal(x=1.310,    y=0.269,     yaw=-6.357, inflation_rad=0.05)               #10 s-curve
-                        ]
+        # self.goal_list = [
+        #                 Goal(x=8.045,   y=-0.398,   yaw=-5.105,  inflation_rad=0.05),               #0 before p-parking
+        #                 Goal(x=6.654,   y=-1.281,   yaw=-3.019, inflation_rad=0.05),                #1 p-parking complete
+        #                 Goal(x=8.698,   y=-0.424,     yaw=-4.874, inflation_rad=0.05),              #2 after p-parking
+        #                 Goal(x=14.631,  y=0.974,     yaw=84.169, inflation_rad=0.05),               #3 after tunnel
+        #                 Goal(x=14.858,  y=4.281,     yaw=84.169,    inflation_rad=0.05),            #4 before t-parking
+        #                 Goal(x=16.086,  y=3.659,    yaw=174.035, inflation_rad=0.0),                #5 t-parking complete
+        #                 Goal(x=13.750,    y=8.025,     yaw=170.188, inflation_rad=0.05),            #7 before_obstacle
+        #                 Goal(x=9.068,    y=8.523,     yaw=173.320, inflation_rad=0.05),             #8 after_obstacle
+        #                 Goal(x=1.802,    y=9.381,     yaw=174.721, inflation_rad=0.05, stop=True),  #9 stop_line
+        #                 Goal(x=1.310,    y=0.269,     yaw=-6.357, inflation_rad=0.05)               #10 s-curve
+        #                 ]
         
         self.goal_list = [
                         Goal(x=14.851,  y=3.382,     yaw=82.142,    inflation_rad=0.05),            #0 up
-                        Goal(x=3.396,    y=9.216,     yaw=175.133, inflation_rad=0.05),             #1 before s-curve
+                        Goal(x=3.396,    y=9.266,     yaw=175.133, inflation_rad=0.05),             #1 before s-curve
                         Goal(x=1.310,    y=0.269,     yaw=-6.357, inflation_rad=0.05),              #2 lap 1
                         Goal(x=14.851,  y=3.382,     yaw=82.142,    inflation_rad=0.05),            #3 up
-                        Goal(x=3.396,    y=9.216,     yaw=175.133, inflation_rad=0.05),             #4 before s-curve
+                        Goal(x=3.396,    y=9.266,     yaw=175.133, inflation_rad=0.05),             #4 before s-curve
                         Goal(x=1.310,    y=0.269,     yaw=-6.357, inflation_rad=0.05),              #5 lap 2
                         Goal(x=14.851,  y=3.382,     yaw=82.142,    inflation_rad=0.05),            #6 up
-                        Goal(x=3.396,    y=9.216,     yaw=175.133, inflation_rad=0.05),             #7 before s-curve
+                        Goal(x=3.396,    y=9.266,     yaw=175.133, inflation_rad=0.05),             #7 before s-curve
                         Goal(x=1.310,    y=0.269,     yaw=-6.357, inflation_rad=0.05)               #8 lap 3
                         ]
 
