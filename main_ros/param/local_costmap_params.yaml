@@ -24,6 +24,7 @@ local_costmap:
   #Configuration for the sensors that the costmap will use to update a map
   static_layer:
     map_topic: /lane/map
+    use_maximum: true
   
   obstacle_layer:   
     observation_sources: scan
