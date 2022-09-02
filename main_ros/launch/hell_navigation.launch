@@ -4,18 +4,24 @@
     <!-- <arg name="map_file" default="$(find hell_coding)/map/map.yaml"/> -->
     <arg name="open_rviz" default="true"/>
     <arg name="move_forward_only" default="false"/>
-    <arg name="map_file" default="$(find hell_coding)/map/kmu_mission.yaml"/>
-    <arg name="lane_map_file" default="$(find hell_coding)/map/kmu_mission_costmap.yaml"/>
+
+    <!-- !!!!$$$$####Should Check!!!!$$$$#### -->
     <arg name="goal_manager" default="false"/>
     <arg name="idx" default="0"/>
     <arg name="expo" default="50"/>
     <arg name="odom_rate" default="1.1"/>
 
+    <arg name="map_file" default="$(find hell_coding)/map/kmu_map.yaml"/>
+    <arg name="lane_map_file" default="$(find hell_coding)/map/kmu_costmap.yaml"/>
+
+    <!-- <arg name="map_file" default="$(find hell_coding)/map/kmu_mission.yaml"/> -->
+    <!-- <arg name="lane_map_file" default="$(find hell_coding)/map/kmu_mission_costmap.yaml"/> -->
+
     <!-- URDF -->
     <include file="$(find hell_coding_urdf)/launch/display.launch"/>
 
     <!-- Sensor -->
-    <include file="$(find xycar_lidar)/launch/xycar_lidar.launch" />
+    <!-- <include file="$(find xycar_lidar)/launch/xycar_lidar.launch"/> -->
     <include file="$(find usb_cam)/launch/xycar_cam.launch">
         <arg name="expo" value="$(arg expo)"/>
     </include>
@@ -30,7 +36,7 @@
         <arg name="idx" value="$(arg idx)"/>
         <arg name="odom_rate" value="$(arg odom_rate)"/>
     </include>
-    <node pkg="hell_coding" name="costmap_clear_node" type="costmap_clear_node.py" respawn="true"/>
+
     <node pkg="hell_coding" name="init_odom" type="init_odom.py"/>
 
 
@@ -42,7 +48,8 @@
     <node pkg="map_server" name="lane_map_server" type="map_server" ns="lane" args="$(arg lane_map_file)"/>
 
     <!-- AMCL -->
-    <include file="$(find hell_coding)/launch/amcl_localization.launch"/>
+    <!-- <include file="$(find hell_coding)/launch/amcl_localization.launch"/> -->
+    <node pkg="tf" name="static_transform_publisher" type="static_transform_publisher" args="0.687 0.366 0 -0.12 0 0 map odom 100"/>
 
     <!-- move_base -->
     <include file="$(find hell_coding)/launch/move_base.launch">
@@ -57,4 +64,5 @@
         <node pkg="rviz" type="rviz" name="rviz" required="true"
             args="-d $(find hell_coding)/rviz/navigation.rviz"/>
     </group>
+
 </launch>

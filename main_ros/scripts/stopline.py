@@ -28,6 +28,7 @@ class Stopline:
         self.image = np.empty(shape=[0])
         self.detected = False
         rospy.Subscriber("/usb_cam/image_rect",Image, self.img_callback)
+        rospy.loginfo("Stop Line Initialized!")
 
 
     def img_callback(self, data):

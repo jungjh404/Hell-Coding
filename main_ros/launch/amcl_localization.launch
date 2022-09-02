@@ -1,13 +1,9 @@
 <launch>
   <!-- Arguments -->
   <arg name="scan_topic"     default="scan"/>
-  <!-- <arg name="initial_pose_x" default="0.612760"/> -->
-  <!-- <arg name="initial_pose_y" default="0.299775"/> -->
-  <!-- <arg name="initial_pose_a" default="-0.1275164"/> -->
-
-  <arg name="initial_pose_x" default="9.0"/>
-  <arg name="initial_pose_y" default="0"/>
-  <arg name="initial_pose_a" default="3.141592"/>
+  <arg name="initial_pose_x" default="0.687"/>
+  <arg name="initial_pose_y" default="0.366"/>
+  <arg name="initial_pose_a" default="-0.12"/>
 
   <!-- robot pose ekf 
   <node pkg="robot_pose_ekf" type="robot_pose_ekf" name="robot_pose_ekf">

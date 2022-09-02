@@ -157,6 +157,12 @@ class motor:
 
     def teb_ackermann_callback(self, msg):
         speed = msg.linear.x
+        if speed < 0.196 and speed >= 0.1:
+            speed = 0.196
+        
+        elif speed > -0.196 and speed <= -0.1:
+            speed = -0.196
+
         steering_angle = -msg.angular.z
         
         if self.gm is not None:

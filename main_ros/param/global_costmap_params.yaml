@@ -9,12 +9,12 @@ global_costmap:
   static_map: true
 
   plugins:
-  - {name: static_layer, type: "costmap_2d::StaticLayer"}
-  - {name: inflation_layer, type: "costmap_2d::InflationLayer"}
+  - {name: global_static_layer, type: "costmap_2d::StaticLayer"}
+  - {name: global_inflation_layer, type: "costmap_2d::InflationLayer"}
 
-  static_layer:
+  global_static_layer:
     map_topic: /lane/map
   
-  inflation_layer:
-    inflation_radius: 0.1
+  global_inflation_layer:
+    inflation_radius: 0.25                   
     cost_scaling_factor: 1

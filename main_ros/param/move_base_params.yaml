@@ -6,5 +6,13 @@ conservative_reset_dist: 3.0
 planner_frequency: 5.0
 oscillation_timeout: 99999.0
 oscillation_distance: 0.05
-recovery_behavior_enabled: false
 clearing_rotation_allowed: false
+recovery_behavior_enabled: true
+recovery_behaviors:
+  - name: costmap_reset
+    type: clear_costmap_recovery/ClearCostmapRecovery
+
+costmap_reset:
+  reset_distance: 0.0
+  layer_names: ["obstacle_layer", "lane_layer", "sonar_layer"]
+

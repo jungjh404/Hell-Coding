@@ -18,7 +18,7 @@ TebLocalPlannerROS:
   publish_feedback: False ##
 
 # Robot
-  max_vel_x: 0.5 #0.5
+  max_vel_x: 2 #0.5
   max_vel_x_backwards: 0.5 # 0.5
   max_vel_y: 0.0 ##
   max_vel_theta: 1.82 #1.0
@@ -43,12 +43,12 @@ TebLocalPlannerROS:
   
   xy_goal_tolerance: 0.1
   yaw_goal_tolerance: 0.17 # 90deg = 1.5708rad
-  free_goal_vel: False
+  free_goal_vel: True
   complete_global_plan: False
   
 # Obstacles
   
-  min_obstacle_dist: 0.
+  min_obstacle_dist: 0.3
   inflation_dist: 0 ##
   include_costmap_obstacles: True
   costmap_obstacles_behind_robot_dist: 1.5  # 0.3

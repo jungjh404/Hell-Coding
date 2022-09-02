@@ -43,7 +43,7 @@ Panels:
     Experimental: false
     Name: Time
     SyncMode: 0
-    SyncSource: LaserScan
+    SyncSource: Image
 Preferences:
   PromptSaveOnExit: true
 Toolbars:
@@ -160,6 +160,8 @@ Visualization Manager:
       Frame Timeout: 15
       Frames:
         All Enabled: false
+        ar_marker_255:
+          Value: true
         base_link:
           Value: true
         base_scan:
@@ -204,7 +206,8 @@ Visualization Manager:
               base_scan:
                 {}
               camera_link:
-                {}
+                ar_marker_255:
+                  {}
               imu_link:
                 {}
               lane_scan:
@@ -432,7 +435,7 @@ Visualization Manager:
       Marker Topic: /visualization_marker
       Name: Marker
       Namespaces:
-        {}
+        basic_shapes: true
       Queue Size: 100
       Value: true
     - Alpha: 1
@@ -567,11 +570,11 @@ Visualization Manager:
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Scale: 104.89279174804688
+      Scale: 62.903724670410156
       Target Frame: <Fixed Frame>
       Value: TopDownOrtho (rviz)
-      X: 7.36169958114624
-      Y: 0.6536413431167603
+      X: 6.884133815765381
+      Y: 2.427285671234131
     Saved: ~
 Window Geometry:
   Displays:

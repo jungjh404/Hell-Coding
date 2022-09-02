@@ -76,13 +76,38 @@ class GoalManager:
         #                 Goal(x=-0.705791,   y=0.978651,     yaw=math.degrees(-0.8345376))         # 4th corner (just before start)
         #                 ]
 
-        ## for dong-bang
-        self.goal_list=[
-            Goal(x=-0.5, y=9.5, yaw=-175, stop=True)
-        ]
-        # [12.5, 0], [12, 0.3], [11.5, 0], [11, -0.3]
+
+        ##### M I S S I O N  G O A L #####
+        # Goal(x, y, yaw, inflation_rad=0.2, stop=False)
+        # Goal(x=14.858,  y=4.281,     yaw=103.631,    inflation_rad=0.05),           
+        self.goal_list = [
+                        Goal(x=8.045,   y=-0.398,   yaw=-5.105,  inflation_rad=0.05),               #0 before p-parking
+                        Goal(x=6.654,   y=-1.281,   yaw=-3.019, inflation_rad=0.05),                #1 p-parking complete
+                        Goal(x=8.698,   y=-0.424,     yaw=-4.874, inflation_rad=0.05),              #2 after p-parking
+                        Goal(x=14.631,  y=0.974,     yaw=84.169, inflation_rad=0.05),               #3 after tunnel
+                        Goal(x=14.858,  y=4.281,     yaw=84.169,    inflation_rad=0.05),            #4 before t-parking
+                        Goal(x=16.086,  y=3.659,    yaw=174.035, inflation_rad=0.0),                #5 t-parking complete
+                        Goal(x=13.750,    y=8.025,     yaw=170.188, inflation_rad=0.05),            #7 before_obstacle
+                        Goal(x=9.068,    y=8.523,     yaw=173.320, inflation_rad=0.05),             #8 after_obstacle
+                        Goal(x=1.802,    y=9.381,     yaw=174.721, inflation_rad=0.05, stop=True),  #9 stop_line
+                        Goal(x=1.310,    y=0.269,     yaw=-6.357, inflation_rad=0.05)               #10 s-curve
+                        ]
+        
+        self.goal_list = [
+                        Goal(x=14.851,  y=3.382,     yaw=82.142,    inflation_rad=0.05),            #0 up
+                        Goal(x=3.396,    y=9.216,     yaw=175.133, inflation_rad=0.05),             #1 before s-curve
+                        Goal(x=1.310,    y=0.269,     yaw=-6.357, inflation_rad=0.05),              #2 lap 1
+                        Goal(x=14.851,  y=3.382,     yaw=82.142,    inflation_rad=0.05),            #3 up
+                        Goal(x=3.396,    y=9.216,     yaw=175.133, inflation_rad=0.05),             #4 before s-curve
+                        Goal(x=1.310,    y=0.269,     yaw=-6.357, inflation_rad=0.05),              #5 lap 2
+                        Goal(x=14.851,  y=3.382,     yaw=82.142,    inflation_rad=0.05),            #6 up
+                        Goal(x=3.396,    y=9.216,     yaw=175.133, inflation_rad=0.05),             #7 before s-curve
+                        Goal(x=1.310,    y=0.269,     yaw=-6.357, inflation_rad=0.05)               #8 lap 3
+                        ]
+
+
         self.goal_num = len(self.goal_list)
-        self.marker_to_goal_dict = {1:1, 2:3, 8:7} # Goal: goal_idx
+        # self.marker_to_goal_dict = {1:1, 2:3, 8:7} # Goal: goal_idx
         self.rate = rospy.Rate(10)
         self.proximity_radius = 0.4 ##
         self.via_point_update_flag = False
@@ -93,12 +118,14 @@ class GoalManager:
         self.goal_pub = rospy.Publisher("/move_base/goal", MoveBaseActionGoal, queue_size=1)
         # self.feedback_sub = rospy.Subscriber("/move_base/feedback", MoveBaseActionFeedback, self.proximity_cb)
         # self.via_pub = rospy.Publisher('/move_base/TebLocalPlannerROS/via_points', Path, queue_size=1)
-        self.ar_sub = rospy.Subscriber("/ar_pose_marker", AlvarMarkers, self.ar_cb)
+        # self.ar_sub = rospy.Subscriber("/ar_pose_marker", AlvarMarkers, self.ar_cb)
         self.tf_listener = tf.TransformListener()
         self.via_point_thread = None
 
         client = actionlib.SimpleActionClient('move_base', MoveBaseAction)
         client.wait_for_server()
+        
+        rospy.wait_for_service('/move_base/local_costmap/local_inflation_layer/set_parameters')
 
         rospy.loginfo("Goal Manager Initialized.")
 
@@ -165,7 +192,7 @@ class GoalManager:
         return goal
 
     def inflation_rad_call(self):
-        srv = rospy.ServiceProxy('/move_base/local_costmap/inflation_layer/set_parameters', Reconfigure)
+        srv = rospy.ServiceProxy('/move_base/local_costmap/local_inflation_layer/set_parameters', Reconfigure)
         msg = Config()
 
         param = DoubleParameter()
@@ -180,6 +207,7 @@ class GoalManager:
 
     
     def reach_cb(self, msg):
+        rospy.sleep(1.)
         if msg.status.text == "Goal reached." and int(msg.status.goal_id.id) == self.goal_cnt:
             self.goal_cnt += 1
 

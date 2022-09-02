@@ -16,13 +16,13 @@ local_costmap:
   - {name: obstacle_layer, type: "costmap_2d::ObstacleLayer"}
   - {name: lane_layer, type: "costmap_2d::ObstacleLayer"}
   - {name: sonar_layer,   type: "range_sensor_layer::RangeSensorLayer"}
-  - {name: static_layer, type: "costmap_2d::StaticLayer"}
-  - {name: inflation_layer, type: "costmap_2d::InflationLayer"}
+  - {name: local_static_layer, type: "costmap_2d::StaticLayer"}
+  - {name: local_inflation_layer, type: "costmap_2d::InflationLayer"}
   
   
   
   #Configuration for the sensors that the costmap will use to update a map
-  static_layer:
+  local_static_layer:
     map_topic: /lane/map
     use_maximum: true
   
@@ -39,7 +39,7 @@ local_costmap:
     observation_sources: lane_scan
     lane_scan: {sensor_frame: lane_scan, data_type: LaserScan, topic: lane_scan, marking: true, clearing: true}
   
-  inflation_layer:
-    inflation_radius: 0.2
+  local_inflation_layer:
+    inflation_radius: 0.05
     cost_scaling_factor: 1
 
