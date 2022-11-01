@@ -1,6 +1,7 @@
 # Hell-Coding
 
-Repository of Hell-Coding Team for 2022 KMU autonomous driving competition
+Repository of Hell-Coding Team for 2022 KMU autonomous driving competition 
+
 Teammate: 정종현, 하지훈, 양승진, 이현민, 황석민
 
 ---
